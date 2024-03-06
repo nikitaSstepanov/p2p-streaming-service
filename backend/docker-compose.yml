@@ -1,0 +1,15 @@
+services:
+  
+  streaming_service_db:
+    container_name: streaming_service_db
+    image: postgres:16.2-bullseye
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_INSIDE_PORT}
