@@ -8,10 +8,8 @@ type Services struct {
 }
 
 func New(storage *storage.Storage) *Services {
-
 	return &Services {
-		Movies: NewMovies(),
-		Account: NewAccount(),
+		Movies: NewMovies(storage),
+		Account: NewAccount(storage),
 	}
-
 }

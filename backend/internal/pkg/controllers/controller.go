@@ -10,11 +10,9 @@ type Controller struct {
 }
 
 func New(services *services.Services) *Controller {
-
 	return &Controller{
 		Services: services,
 	}
-
 }
 
 func (c *Controller) InitRoutes() *gin.Engine {
