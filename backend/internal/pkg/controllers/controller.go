@@ -16,9 +16,8 @@ func New(services *services.Services) *Controller {
 }
 
 func (c *Controller) InitRoutes() *gin.Engine {
-
 	router := gin.New()
-
+	
 	api := router.Group("/api")
 	{
 		movies := api.Group("/movies")
@@ -35,5 +34,4 @@ func (c *Controller) InitRoutes() *gin.Engine {
 	}
 
 	return router
-
 }

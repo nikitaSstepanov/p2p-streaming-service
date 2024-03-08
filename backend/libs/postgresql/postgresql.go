@@ -22,21 +22,35 @@ type Config struct {
 	SSLMode  string
 }
 
-func GetConfig(cfg Config) *pgxpool.Config {
-	config, _ := pgxpool.ParseConfig(fmt.Sprintf(
+func GetConfig(cfg Config) (*pgxpool.Config, error) {
+	config, err := pgxpool.ParseConfig(fmt.Sprintf(
 		"user=%s password=%s host=%s port=%s dbname=%s sslmode=%s",
 		cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.DBName, cfg.SSLMode,
 	))
 
-	return config
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
 }
 
-func ConnectToDb(ctx context.Context, cfg Config) *pgxpool.Pool {
-	config := GetConfig(cfg)
+func ConnectToDb(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
+	config, err := GetConfig(cfg)
 
-	db, _ := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		return nil, err
+	}
 
-	db.Ping(ctx)
+	db, err := pgxpool.NewWithConfig(ctx, config)
 
-	return db
+	if err != nil {
+		return nil, err
+	}
+
+	if err := db.Ping(ctx); err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }

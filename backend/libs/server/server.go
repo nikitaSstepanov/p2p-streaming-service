@@ -1,6 +1,9 @@
 package server
 
 import (
+	"context"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -15,15 +18,15 @@ type Server struct {
 }
 
 func New(handler http.Handler, url string) *Server {
-	
+
 	httpServer := &http.Server{
-		ReadTimeout: readTimeout,
+		ReadTimeout:  readTimeout,
 		WriteTimeout: writeTimeout,
-		Handler: handler,
-		Addr: url,
+		Handler:      handler,
+		Addr:         url,
 	}
 
-	server := &Server {
+	server := &Server{
 		server: httpServer,
 	}
 
@@ -31,8 +34,17 @@ func New(handler http.Handler, url string) *Server {
 }
 
 func (s *Server) Start() error {
+	var err error
 
-	err := s.server.ListenAndServe()
+	slog.Info(fmt.Sprintf("Server started at %s", s.server.Addr))
+
+	go func() {
+		err = s.server.ListenAndServe()
+	}()
 
 	return err
+}
+
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.server.Shutdown(ctx)
 }

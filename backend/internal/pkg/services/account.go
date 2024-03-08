@@ -3,10 +3,11 @@ package services
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/dto"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/gin-gonic/gin"
 )
 
 type Account struct {
@@ -20,27 +21,28 @@ func NewAccount(storage *storage.Storage) *Account {
 }
 
 func (a *Account) Create(ctx *gin.Context) {
-	type CreateUserDto struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
+	var dto dto.CreateUserDto
+
+	if err := ctx.ShouldBindJSON(&dto); err != nil {
+		return 
 	}
-
-	var dto CreateUserDto
-
-	if err := ctx.BindJSON(&dto); err != nil {
-        return
-    }
 
 	candidate := a.Storage.Users.GetUser(ctx, dto.Username)
 
-	if (candidate.Id != 0) {
-		ctx.JSON(http.StatusBadRequest, "This username is taken")
+	if candidate.Id != 0 {
+		ctx.JSON(http.StatusBadRequest, "This username is taken.")
+		return
+	}
+
+	password, err := hashPassword(dto.Password)
+
+	if err != nil {
 		return
 	}
 
 	user := &entities.User{
 		Username: dto.Username,
-		Password: HashPassword(dto.Password),
+		Password: password,
 	}
 
 	a.Storage.Users.Create(ctx, user)
@@ -50,8 +52,12 @@ func (a *Account) SignIn(ctx *gin.Context) {
 
 }
 
-func HashPassword(password string) string {
-	hash, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
+func hashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 
-	return string(hash)
+	if err != nil {
+		return "", err
+	}
+
+	return string(hash), nil
 }
