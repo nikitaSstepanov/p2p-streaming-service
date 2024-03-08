@@ -3,8 +3,8 @@ package services
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
+	"github.com/gin-gonic/gin"
 )
 
 type Movies struct {

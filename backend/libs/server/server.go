@@ -1,11 +1,11 @@
 package server
 
 import (
-	"context"
-	"fmt"
-	"log/slog"
 	"net/http"
+	"log/slog"
+	"context"
 	"time"
+	"fmt"
 )
 
 const (

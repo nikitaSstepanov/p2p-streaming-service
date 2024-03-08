@@ -1,0 +1,6 @@
+pgdata
+logs
+.gitignore
+Dockerfile*
+docker-compose*
+.dockerignore

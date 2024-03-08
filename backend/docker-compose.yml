@@ -6,10 +6,13 @@ services:
     env_file:
       - .env
     environment:
-      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_USER: "admin"
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_DB: "db"
     volumes:
       - ./pgdata:/var/lib/postgresql/data
     ports:
-      - ${POSTGRES_PORT}:${POSTGRES_INSIDE_PORT}
+      - 5432:5432
+
+volumes:
+  pgdata:
