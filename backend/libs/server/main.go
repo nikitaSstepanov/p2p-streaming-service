@@ -10,14 +10,26 @@ import (
 
 func main() {
 	inPath := os.Args[1];
-	// outPath := os.Args[2];
 	tf, err := decode.Open(inPath);
 	if err != nil {
 		log.Fatal(err);
 	}
 
-	torrent, err := tf.GetTorrentFile();
-	res, err := p2p.Download(torrent, 2);
+	torrent, err := tf.GetTorrentFile(); // -> Torrent
+	// type Torrent struct {
+		// PieceLength - вес одной части
+		// Length - вес всего файла
+		// Name - имя файла
+		// ... - остальное
+	// }
+	// по идее, больше тебе ничего от этой структуры не надо
+	index := 2;
+	res, err := p2p.Download(torrent, index); // ->Piece
+	// type Piece struct {
+		// Index - номер части ( в 1-индексации)
+		// buff - буфер (то, что скачал у других пиров)
+		// ... - остальное
+	// }
 	if err != nil {
 		log.Fatal(err);
 	}
