@@ -23,20 +23,6 @@ const (
 	Cancel
 )
 
-type MSG struct {
-	ID 		int
-	Payload []byte
-}
-
-type Client struct {
-	conn 		net.Conn
-	InfoHash 	[20]byte
-	PeerId 		[20]byte
-	Peer 		decode.Peer
-	bt_field	bt.BT
-	Choked		bool
-}
-
 type Piece struct {
 	begin 	int
 	end 	int
@@ -53,6 +39,20 @@ type ProgressInfo struct {
 	requested 	int
 	index		int
 	block_size	int
+}
+
+type MSG struct {
+	ID 		int
+	Payload []byte
+}
+
+type Client struct {
+	conn 		net.Conn
+	InfoHash 	[20]byte
+	PeerId 		[20]byte
+	Peer 		decode.Peer
+	bt_field	bt.BT
+	Choked		bool
 }
 
 func NewClient(infoHash, PeerID [20]byte, Peer decode.Peer) (*Client, error) {
