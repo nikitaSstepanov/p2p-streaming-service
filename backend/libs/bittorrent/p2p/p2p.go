@@ -2,13 +2,16 @@ package p2p;
 
 import (
 	"net"
-	"bit_tor/decode"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/libs/bittorrent/decode"
 	"time"
 	"encoding/binary"
-	bt "bit_tor/BitField"
+	bt "github.com/nikitaSstepanov/p2p-streaming-service/backend/libs/bittorrent/BitField"
 	"io"
 	"fmt"
 	"bytes"
+	"github.com/schollz/progressbar/v3"
+	// "os/exec"
+	// "os"
 )
 
 const (
@@ -39,6 +42,7 @@ type ProgressInfo struct {
 	requested 	int
 	index		int
 	block_size	int
+	bar			*progressbar.ProgressBar
 }
 
 type MSG struct {
@@ -208,6 +212,9 @@ func (c *Client) SendInterested() error {
 }
 
 func ParseHave(msg MSG) (int, error) {
+	if len(msg.Payload) <= 0 {
+		return -1, fmt.Errorf("msg size == 0");
+	}
 	index := binary.BigEndian.Uint32(msg.Payload[1:]);
 	if index < 0 {
 		return -1, fmt.Errorf("received index < 0");
@@ -238,7 +245,6 @@ func (p *ProgressInfo) ParsePiece(msg MSG, index int) (int, error) {
 	return len(data), nil;
 }
 
-
 func (c *Client) Read() (MSG, error) {
 	// c.conn.SetDeadline(time.Now().Add(5 * time.Second));
 	// defer c.conn.SetDeadline(time.Time{});
@@ -247,6 +253,10 @@ func (c *Client) Read() (MSG, error) {
 		return MSG{}, err;
 	}
 	return msg, nil;
+}
+
+func (p *ProgressInfo) update_progress_bar() {
+	p.bar.Add(p.block_size);
 }
 
 func (p *ProgressInfo) Read() error {
@@ -270,6 +280,7 @@ func (p *ProgressInfo) Read() error {
 			return err;
 		}
 		p.downloaded += p.block_size;
+		p.update_progress_bar();
 	}
 	return nil;
 }
@@ -317,6 +328,7 @@ func (c *Client) DownloadPiece(pic Piece) ([]byte, error) {
 		block_size: block_size,
 		index: pic.index,
 		buff: make([]byte, size),
+		bar: progressbar.Default(int64(size)),
 	};
 	c.conn.SetDeadline(time.Now().Add(15 * time.Second));
 	defer c.conn.SetDeadline(time.Time{});
@@ -333,17 +345,16 @@ func (c *Client) DownloadPiece(pic Piece) ([]byte, error) {
 		}
 		err := p.Read();
 		if err != nil {
+			// cmd := exec.Command("clear");
+			// cmd.Stdout = os.Stdout;
+			// cmd.Run();
 			return nil, err;
 		}
-		// fmt.Println(p.downloaded, "of", p.size);
+		
 	}
 	
 	return p.buff, nil;
 }
-
-// func Precalc(t decode.Torrent) Info { 
-// 	...
-// }
 
 func Download(t decode.Torrent, index int) (Piece, error) {
 	if index < 0 || index > len(t.PieceHashes) {
@@ -355,6 +366,7 @@ func Download(t decode.Torrent, index int) (Piece, error) {
 		hash: t.PieceHashes[index],
 		index: index,
 	};
+	// fmt.Println(len(t.PieceHashes));
 	for _, peer := range t.Peers {
 		c, err := NewClient(t.InfoHash, t.PeerID, peer);
 		if err != nil {

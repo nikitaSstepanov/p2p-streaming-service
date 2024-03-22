@@ -17,8 +17,8 @@ import (
 )
 
 type BencodeTrackerResponse struct {
-	Peers 		string `bencode: "peers"`
-	Interval 	int `bencode: "interval"`
+	Peers 		string 	`bencode: "peers"`
+	Interval 	int 	`bencode: "interval"`
 }
 
 type TorrentFile struct {
@@ -142,7 +142,7 @@ func (t *TorrentFile) requestPeers(peerID [20]byte) ([]Peer, error) {
 		return []Peer{}, err;
 	}
 	// body, err := ioutil.ReadAll(res.Body);
-	// if err != nil {
+	// if err != nil {					
 	// 	return []string{" "}, err;
 	// }
 	// fmt.Println(body);
@@ -166,9 +166,9 @@ func (t *TorrentFile) GetTorrentFile() (Torrent, error) {
 	if err != nil {
 		return Torrent{}, err;
 	}
-
-	peers, err := t.requestPeers(peerID)
+	peers, err := t.requestPeers(peerID);
 	if err != nil {
+		fmt.Println(err);
 		return Torrent{}, err
 	}
 	return Torrent {

@@ -1,20 +1,20 @@
 package main;
 
 import (
-	"log"
 	"os"
-	"bit_tor/decode"
-	"bit_tor/p2p"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/libs/bittorrent/decode"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/libs/bittorrent/p2p"
 	"fmt"
 )
 
 func main() {
 	inPath := os.Args[1];
 	tf, err := decode.Open(inPath);
+	// fmt.Println(inPath);
 	if err != nil {
-		log.Fatal(err);
+		fmt.Println(err);
+		return ;
 	}
-
 	torrent, err := tf.GetTorrentFile(); // -> Torrent
 	// type Torrent struct {
 		// PieceLength - вес одной части
@@ -32,7 +32,8 @@ func main() {
 		// ... - остальное
 	// }
 	if err != nil {
-		log.Fatal(err);
+		fmt.Println(err);
+		return ;
 	}
 	fmt.Println(res);
 }
