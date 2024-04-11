@@ -9,7 +9,7 @@ import (
 	"io"
 	"fmt"
 	"bytes"
-	"github.com/schollz/progressbar/v3"
+	// "github.com/schollz/progressbar/v3"
 	// "os/exec"
 	// "os"
 )
@@ -42,7 +42,7 @@ type ProgressInfo struct {
 	requested 	int
 	index		int
 	block_size	int
-	bar			*progressbar.ProgressBar
+	// bar			*progressbar.ProgressBar
 }
 
 type MSG struct {
@@ -255,9 +255,9 @@ func (c *Client) Read() (MSG, error) {
 	return msg, nil;
 }
 
-func (p *ProgressInfo) update_progress_bar() {
-	p.bar.Add(p.block_size);
-}
+// func (p *ProgressInfo) update_progress_bar() {
+// 	p.bar.Add(p.block_size);
+// }
 
 func (p *ProgressInfo) Read() error {
 	msg, err := p.client.Read();
@@ -280,7 +280,8 @@ func (p *ProgressInfo) Read() error {
 			return err;
 		}
 		p.downloaded += p.block_size;
-		p.update_progress_bar();
+		fmt.Println("downloaded ", p.downloaded, " of ", p.size);
+		// p.update_progress_bar();
 	}
 	return nil;
 }
@@ -328,7 +329,7 @@ func (c *Client) DownloadPiece(pic Piece) ([]byte, error) {
 		block_size: block_size,
 		index: pic.index,
 		buff: make([]byte, size),
-		bar: progressbar.Default(int64(size)),
+		// bar: progressbar.Default(int64(size)),
 	};
 	c.conn.SetDeadline(time.Now().Add(15 * time.Second));
 	defer c.conn.SetDeadline(time.Time{});
