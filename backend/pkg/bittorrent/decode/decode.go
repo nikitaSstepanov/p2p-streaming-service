@@ -133,11 +133,14 @@ func (t *TorrentFile) requestPeers(peerID [20]byte) ([]Peer, error) {
 	if err != 	nil {
 		return []Peer{}, err;
 	}
+
 	req, err := http.NewRequest(http.MethodGet, request, nil);
+
 	if err != nil {
 		return []Peer{}, err;
 	}
 	res, err := http.DefaultClient.Do(req);
+	
 	if err != nil {
 		return []Peer{}, err;
 	}

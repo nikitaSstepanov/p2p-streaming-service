@@ -1,8 +1,8 @@
-url: ":8080"
+url: ":80"
 
 db:
   username: "admin"
-  host: "localhost"
+  host: "streaming_service_db"
   port: "5432"
   dbname: "db"
   sslmode: "disable"

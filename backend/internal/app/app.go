@@ -12,9 +12,9 @@ import (
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/controllers"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/libs/logger"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/libs/postgresql"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/libs/server"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/logger"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/postgresql"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/server"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/migrations"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -35,7 +35,7 @@ func New() *App {
 
 	gin.SetMode(gin.TestMode)
 
-	if err := godotenv.Load("../../.env"); err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		slog.Error("Can`t load env. Error:", err)
 	}
 
@@ -44,7 +44,7 @@ func New() *App {
 	}
 
 	ctx := context.TODO()
-
+	
 	db, err := postgresql.ConnectToDb(ctx, postgresql.Config{
 		Username: viper.GetString("db.username"),
 		Password: os.Getenv("POSTGRES_PASSWORD"),

@@ -2,10 +2,10 @@ package p2p;
 
 import (
 	"net"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/libs/bittorrent/decode"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/bittorrent/decode"
 	"time"
 	"encoding/binary"
-	bt "github.com/nikitaSstepanov/p2p-streaming-service/backend/libs/bittorrent/BitField"
+	bt "github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/bittorrent/BitField"
 	"io"
 	"fmt"
 	"bytes"
@@ -30,7 +30,7 @@ type Piece struct {
 	begin 	int
 	end 	int
 	index	int
-	buff 	[]byte
+	Buff 	[]byte
 	hash	[20]byte
 }
 
@@ -389,7 +389,7 @@ func Download(t decode.Torrent, index int) (Piece, error) {
 		}
 		c.SendHave(pic.index);
 		return Piece {
-			buff: buff,
+			Buff: buff,
 			index: pic.index,
 		}, nil;
 	}

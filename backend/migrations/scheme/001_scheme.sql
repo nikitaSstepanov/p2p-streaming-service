@@ -8,7 +8,8 @@ CREATE TABLE users (
 
 CREATE TABLE movies (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255)
+    name VARCHAR(255),
+    path VARCHAR(255)
 );
 
 -- +goose Down

@@ -17,7 +17,7 @@ func Migrate(pool *pgxpool.Pool) error {
 		return err
 	}
 
-	if err := goose.Up(db, "../../migrations/scheme"); err != nil {
+	if err := goose.Up(db, "migrations/scheme"); err != nil {
 		return err
 	}
 

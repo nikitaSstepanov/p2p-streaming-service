@@ -1,9 +1,9 @@
-package main;
+package example;
 
 import (
 	"os"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/libs/bittorrent/decode"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/libs/bittorrent/p2p"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/bittorrent/decode"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/bittorrent/p2p"
 	"fmt"
 )
 
