@@ -34,6 +34,8 @@ services:
     networks:
       - internal
       - external
+    volumes:
+      - ./appdata:/var/lib/app/data
 
   nginx:
     container_name: nginx
@@ -56,3 +58,4 @@ networks:
 
 volumes:
   pgdata:
+  appdata:

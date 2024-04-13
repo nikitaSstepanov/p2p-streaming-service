@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	readTimeout  = 10 * time.Second
-	writeTimeout = 10 * time.Second
+	readTimeout  = 10 * time.Minute
+	writeTimeout = 10 * time.Minute
 )
 
 type Server struct {

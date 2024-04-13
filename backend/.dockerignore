@@ -1,4 +1,5 @@
 pgdata
+appdata
 logs
 .gitignore
 Dockerfile*

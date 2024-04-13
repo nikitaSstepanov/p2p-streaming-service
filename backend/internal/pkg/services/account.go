@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/dto"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/dto/users"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
 	"github.com/spf13/viper"
