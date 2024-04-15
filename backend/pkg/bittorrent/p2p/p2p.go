@@ -319,7 +319,7 @@ func (c *Client) sendRequest(index, begin, size int) error {
 func (c *Client) DownloadPiece(pic Piece) ([]byte, error) {
 	var (
 		size = pic.end - pic.begin
-		block_size = 8192
+		block_size = 4096
 	)
 	p := ProgressInfo {
 		client: c,
@@ -331,7 +331,7 @@ func (c *Client) DownloadPiece(pic Piece) ([]byte, error) {
 		buff: make([]byte, size),
 		// bar: progressbar.Default(int64(size)),
 	};
-	c.conn.SetDeadline(time.Now().Add(15 * time.Second));
+	c.conn.SetDeadline(time.Now().Add(20 * time.Second));
 	defer c.conn.SetDeadline(time.Time{});
 	for ; p.downloaded < size; {
 		if !c.Choked {
