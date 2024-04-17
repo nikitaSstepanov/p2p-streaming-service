@@ -2,9 +2,9 @@ url: ":80"
 
 db:
   username: "admin"
-  host: "streaming_service_db"
+  host: "localhost"
   port: "5432"
-  dbname: "db"
+  dbname: "cloud_storage_db"
   sslmode: "disable"
 
 jwt:

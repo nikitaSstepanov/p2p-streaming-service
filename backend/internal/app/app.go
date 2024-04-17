@@ -1,23 +1,24 @@
 package app
 
 import (
-	"os/signal"
-	"log/slog"
 	"context"
-	"syscall"
 	"fmt"
+	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/config"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/controllers"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/state"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/migrations"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/logger"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/postgresql"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/server"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/migrations"
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -64,13 +65,15 @@ func New() *App {
 		slog.Error("Can`t migrate db scheme. Error:", err)
 	}
 
+	state := state.New()
+
 	url := viper.GetString("url")
 
 	app := &App{}
 
 	app.Storage = storage.New(db)
 
-	app.Services = services.New(app.Storage)
+	app.Services = services.New(app.Storage, state)
 
 	app.Controller = controllers.New(app.Services)
 

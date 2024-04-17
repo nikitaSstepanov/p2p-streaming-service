@@ -3,9 +3,11 @@ package services
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/dto/movies"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/state"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/bittorrent/decode"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/bittorrent/p2p"
@@ -13,11 +15,13 @@ import (
 
 type Movies struct {
 	Storage *storage.Storage
+	State   *state.State
 }
 
-func NewMovies(storage *storage.Storage) *Movies {
+func NewMovies(storage *storage.Storage, state *state.State) *Movies {
 	return &Movies{
 		Storage: storage,
+		State: state,
 	}
 }
 
@@ -75,38 +79,70 @@ func (m *Movies) GetMovieChunck(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, "This moive wasn`t found")
 		return
 	}
+
+	var result dto.ChunkDto
+
+	movieTorrent, isInMap := (*m.State.Movies)[movie.Id] 
+
+	if isInMap {
+		index, err := strconv.Atoi(chunkId)
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, "chunkId must be integer")
+			return
+		} 
+
+		piece, err := p2p.Download(*movieTorrent.Torrent, index)
+
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
+			return 
+		}
+
+		result = dto.ChunkDto{
+			Buffer: piece.Buff,
+			NextIndex: uint64(index) + 1,
+		}
+	} else {	
+		tf, err := decode.Open(movie.Path)
 	
-	tf, err := decode.Open(movie.Path)
-
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
-		return 
-	}
-
-	torrent, err := tf.GetTorrentFile()
-
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
-		return 
-	}
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
+			return 
+		}
 	
-	index, err := strconv.Atoi(chunkId)
+		torrent, err := tf.GetTorrentFile()
+	
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
+			return 
+		}
+		
+		index, err := strconv.Atoi(chunkId)
+	
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, "chunkId must be integer")
+			return
+		} 
+	
+		piece, err := p2p.Download(torrent, index)
+	
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
+			return 
+		}
+	
+		result = dto.ChunkDto{
+			Buffer: piece.Buff,
+			NextIndex: uint64(index) + 1,
+		}
 
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, "chunkId must be integer")
-		return
-	} 
+		var toSave state.Movie
 
-	piece, err := p2p.Download(torrent, index)
+		toSave.Torrent = &torrent
+		toSave.Expires = time.Now().Local().Add(4 * time.Hour)
 
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
-		return 
-	}
-
-	result := dto.ChunkDto{
-		Buffer: piece.Buff,
-		NextIndex: uint64(index) + 1,
+		(*m.State.Movies)[movie.Id] = toSave
 	}
 
 	ctx.JSON(http.StatusOK, result)
@@ -121,31 +157,61 @@ func (m *Movies) StartWatch(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, "This moive wasn`t found")
 		return
 	}
-	
-	tf, err := decode.Open(movie.Path)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
-		return 
-	}
 
-	torrent, err := tf.GetTorrentFile()
+	var result dto.ChunkDto
 
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
-		return 
-	}
+	movieTorrent, isInMap := (*m.State.Movies)[movie.Id] 
 
-	index := 0
-	piece, err := p2p.Download(torrent, index)
+	if isInMap {
+		piece, err := p2p.Download(*movieTorrent.Torrent, 0)
 
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
-		return 
-	}
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
+			return 
+		}
 
-	result := dto.ChunkDto{
-		Buffer: piece.Buff,
-		NextIndex: 1,
+		result = dto.ChunkDto{
+			Buffer: piece.Buff,
+			NextIndex: 1,
+		}
+
+		movieTorrent.Expires = time.Now().Local().Add(4 * time.Hour)
+
+		(*m.State.Movies)[movie.Id] = movieTorrent
+	} else {
+		tf, err := decode.Open(movie.Path)
+
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
+			return 
+		}
+
+		torrent, err := tf.GetTorrentFile()
+
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
+			return 
+		}
+
+		index := 0
+		piece, err := p2p.Download(torrent, index)
+
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, "Something going wrong.....")
+			return 
+		}
+
+		result = dto.ChunkDto{
+			Buffer: piece.Buff,
+			NextIndex: 1,
+		}
+
+		var toSave state.Movie
+
+		toSave.Torrent = &torrent
+		toSave.Expires = time.Now().Local().Add(4 * time.Hour)
+
+		(*m.State.Movies)[movie.Id] = toSave
 	}
 
 	ctx.JSON(http.StatusOK, result)
