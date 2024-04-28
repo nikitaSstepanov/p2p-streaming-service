@@ -14,15 +14,15 @@ type Client interface {
 }
 
 type Config struct {
-	Host     string
-	Port     string
-	Username string
-	Password string
-	DBName   string
-	SSLMode  string
+	Host      string
+	Port      string
+	Username  string
+	Password  string
+	DBName    string
+	SSLMode   string
 }
 
-func GetConfig(cfg Config) (*pgxpool.Config, error) {
+func GetConfig(cfg *Config) (*pgxpool.Config, error) {
 	config, err := pgxpool.ParseConfig(fmt.Sprintf(
 		"user=%s password=%s host=%s port=%s dbname=%s sslmode=%s",
 		cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.DBName, cfg.SSLMode,
@@ -35,7 +35,7 @@ func GetConfig(cfg Config) (*pgxpool.Config, error) {
 	return config, nil
 }
 
-func ConnectToDb(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
+func ConnectToDb(ctx context.Context, cfg *Config) (*pgxpool.Pool, error) {
 	config, err := GetConfig(cfg)
 
 	if err != nil {

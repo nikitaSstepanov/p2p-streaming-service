@@ -39,3 +39,9 @@ func (u *Users) Create(ctx context.Context, user *entities.User) {
 
 	u.db.QueryRow(ctx, query)
 }
+
+func (u *Users) Update(ctx context.Context, user *entities.User) {
+	query := fmt.Sprintf("UPDATE %s SET	role = '%s' WHERE id = %d;", usersTable, user.Role, user.Id)
+
+	u.db.QueryRow(ctx, query)
+}

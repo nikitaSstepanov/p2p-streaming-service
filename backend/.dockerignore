@@ -1,7 +1,9 @@
-volumes
-logs
-.gitignore
-Dockerfile*
 docker-compose*
 .dockerignore
+.env.example
+Dockerfile*
+.gitignore
+volumes
+files
 nginx
+logs

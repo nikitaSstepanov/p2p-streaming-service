@@ -1,4 +1,4 @@
-package server;
+package server
 
 import (
 	"net/http"
@@ -18,15 +18,13 @@ type Server struct {
 }
 
 func New(handler http.Handler, url string) *Server {
-	httpServer := &http.Server{
-		ReadTimeout:  readTimeout,
-		WriteTimeout: writeTimeout,
-		Handler:      handler,
-		Addr:         url,
-	}
-
 	return &Server{
-		server: httpServer,
+		server: &http.Server{
+			ReadTimeout:  readTimeout,
+			WriteTimeout: writeTimeout,
+			Handler:      handler,
+			Addr:         url,
+		},
 	}
 }
 

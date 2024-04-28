@@ -1,23 +1,23 @@
 package services
 
 import (
-	"context"
-	"fmt"
 	"net/http"
-	"os"
-	"strconv"
+	"context"
 	"strings"
-	"time"
+	"strconv"
 	"math"
+	"time"
+	"fmt"
+	"os"
 
-	"github.com/gin-gonic/gin"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services/dto/movies"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/state"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/bittorrent/decode"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/bittorrent/p2p"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/state"
 	"github.com/redis/go-redis/v9"
+	"github.com/gin-gonic/gin"
 )
 
 type Movies struct {
@@ -29,8 +29,8 @@ type Movies struct {
 func NewMovies(storage *storage.Storage, state *state.State, redis *redis.Client) *Movies {
 	return &Movies{
 		Storage: storage,
-		Redis: redis,
-		State: state,
+		Redis:   redis,
+		State:   state,
 	}
 }
 
@@ -47,7 +47,7 @@ func (m *Movies) GetMovies(ctx *gin.Context) {
 		for i := 0; i < len(*movies); i++ {
 			movie := (*movies)[i]
 			toAdd := dto.MovieDto{
-				Id: movie.Id,
+				Id:   movie.Id,
 				Name: movie.Name,
 			}
 			result = append(result, toAdd)
@@ -70,7 +70,7 @@ func (m *Movies) GetMovieById(ctx *gin.Context) {
 	}
 
 	result := dto.MovieDto{
-		Id: movie.Id,
+		Id:   movie.Id,
 		Name: movie.Name,
 	}
 
@@ -157,9 +157,9 @@ func (m *Movies) StartWatch(ctx *gin.Context) {
 
 		if adapter.Id == 0 {
 			adapter = &entities.Adapter{
-				MovieId: movie.Id,
-				Version: movie.FileVersion,
-				Length: uint64(torrent.Length),
+				MovieId:     movie.Id,
+				Version:     movie.FileVersion,
+				Length:      uint64(torrent.Length),
 				PieceLength: uint64(torrent.PieceLength),
 			}
 
@@ -186,8 +186,9 @@ func (m *Movies) StartWatch(ctx *gin.Context) {
 	}
 
 	result = dto.ChunkDto{
-		Buffer: piece.Buff,
-		NextIndex: 1,
+		Buffer:      piece.Buff,
+		NextIndex:   1,
+		FileVersion: movie.FileVersion,
 	}
 
 	ctx.JSON(http.StatusOK, result)
@@ -289,9 +290,9 @@ func (m *Movies) GetMovieChunck(ctx *gin.Context) {
 
 		if adapter.Id == 0 {
 			adapter = &entities.Adapter{
-				MovieId: movie.Id,
-				Version: movie.FileVersion,
-				Length: uint64(torrent.Length),
+				MovieId:     movie.Id,
+				Version:     movie.FileVersion,
+				Length:      uint64(torrent.Length),
 				PieceLength: uint64(torrent.PieceLength),
 			}
 
@@ -326,8 +327,9 @@ func (m *Movies) GetMovieChunck(ctx *gin.Context) {
 	}
 
 	result = dto.ChunkDto{
-		Buffer: piece.Buff,
-		NextIndex: uint64(index) + 1,
+		Buffer:      piece.Buff,
+		NextIndex:   uint64(index) + 1,
+		FileVersion: movie.FileVersion,
 	}
 
 	ctx.JSON(http.StatusOK, result)

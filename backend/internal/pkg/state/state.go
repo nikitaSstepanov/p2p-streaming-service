@@ -43,6 +43,7 @@ func clearState(movies *map[uint64]Movie, mutex *sync.Mutex) error {
 		}
 
 		mutex.Unlock()
+		
 		time.Sleep(10 * time.Minute)
 	}
 }

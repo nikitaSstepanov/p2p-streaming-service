@@ -20,8 +20,6 @@ COPY ./config/config.yml ./config/config.yml
 
 COPY ./migrations/scheme ./migrations/scheme
 
-COPY ./files ./files
-
 COPY .env .env
 
 CMD [ "./p2p-streaming-service" ]

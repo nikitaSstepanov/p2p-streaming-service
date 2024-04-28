@@ -3,8 +3,8 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services"
+	"github.com/gin-gonic/gin"
 )
 
 type Controller struct {
@@ -41,9 +41,11 @@ func (c *Controller) InitRoutes() *gin.Engine {
 
 		admin := api.Group("/admin")
 		{
+			admin.POST("/add-admin", c.Services.Admin.AddAdmin)
+
 			movies := admin.Group("/movies") 
 			{
-				movies.POST("/add", c.Services.Admin.CreateMovie)
+				movies.POST("/new", c.Services.Admin.CreateMovie)
 			}
 		}
 	}

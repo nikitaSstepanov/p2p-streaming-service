@@ -1,62 +1,72 @@
 package services
 
 import (
-	"io"
 	"net/http"
-	"os"
-	"slices"
 	"strings"
+	"slices"
+	"os"
+	"io"
 
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services/dto/users"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
-)
-
-var (
-	available = []string{ "ADMIN", "SUPER_ADMIN" }
 )
 
 type Admin struct {
 	Storage *storage.Storage
-	Auth *Auth
+	Auth    *Auth
 }
 
 func NewAdmin(storage *storage.Storage, auth *Auth) *Admin {
 	return &Admin{
 		Storage: storage,
-		Auth: auth,
+		Auth:    auth,
 	}
 }
 
-func (a *Admin) CreateMovie(ctx *gin.Context) {
-	header := strings.Split(ctx.GetHeader("Authorization"), " ")
-	bearer := header[0]
-	token := header[1]
+func (a *Admin) AddAdmin(ctx *gin.Context) {
+	admin := a.checkAccess(ctx, "SUPER_ADMIN")
 
-	if bearer != "Bearer" {
-		ctx.JSON(http.StatusUnauthorized, "Incorrect token.")
+	if admin.Id == 0 {
 		return
 	}
 
-	claims, err := a.Auth.ValidateToken(token)
+	var body dto.AddAdminDto
 
-	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, "Incorrecct token.")
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, "Incorrect data.")
 		return
 	}
 
-	user := a.Storage.Users.GetUser(ctx, claims.Username)
+	user := a.Storage.Users.GetUser(ctx, body.Username)
 
 	if user.Id == 0 {
-		ctx.JSON(http.StatusUnauthorized, "Incorrecct token.")
+		ctx.JSON(http.StatusNotFound, "User wasn`t found.")
 		return
 	}
 
-	found := slices.Contains(available, user.Role)
+	if admin.Username == body.Username {
+		ctx.JSON(http.StatusBadRequest, "It is your username.")
+		return
+	}
 
-	if !found {
-		ctx.JSON(http.StatusForbidden, "Forbidden resource.")
+	if body.IsSuper {
+		user.Role = "SUPER_ADMIN"
+	} else {
+		user.Role = "ADMIN"
+	}
+
+	a.Storage.Users.Update(ctx, user)
+
+	ctx.JSON(http.StatusOK, "Role is asigned.")
+}
+
+func (a *Admin) CreateMovie(ctx *gin.Context) {
+	admin := a.checkAccess(ctx, "ADMIN", "SUPER_ADMIN")
+
+	if admin.Id == 0 {
 		return
 	}
 
@@ -120,12 +130,46 @@ func (a *Admin) CreateMovie(ctx *gin.Context) {
 	}
 
 	movie := &entities.Movie{
-		Name: name[0],
-		Paths: strings.Join(paths, ";"),
-		FileVersion: 0,
+		Name:         name[0],
+		Paths:        strings.Join(paths, ";"),
+		FileVersion:  0,
 	}
 
 	a.Storage.Movies.CreateMovie(ctx, movie)
 
 	ctx.JSON(http.StatusCreated, "Created.")
+}
+
+func (a *Admin) checkAccess(ctx *gin.Context, roles ...string) *entities.User {
+	header := strings.Split(ctx.GetHeader("Authorization"), " ")
+	bearer := header[0]
+	token := header[1]
+
+	if bearer != "Bearer" {
+		ctx.JSON(http.StatusUnauthorized, "Incorrect token.")
+		return &entities.User{}
+	}
+
+	claims, err := a.Auth.ValidateToken(token)
+
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, "Incorrecct token.")
+		return &entities.User{}
+	}
+
+	user := a.Storage.Users.GetUser(ctx, claims.Username)
+
+	if user.Id == 0 {
+		ctx.JSON(http.StatusUnauthorized, "Incorrecct token.")
+		return &entities.User{}
+	}
+
+	found := slices.Contains(roles, user.Role)
+
+	if !found {
+		ctx.JSON(http.StatusForbidden, "Forbidden resource.")
+		return &entities.User{}
+	}
+
+	return user
 }

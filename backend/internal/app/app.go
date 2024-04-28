@@ -1,25 +1,25 @@
 package app
 
 import (
+	"os/signal"
+	"log/slog"
+	"syscall"
 	"context"
 	"fmt"
-	"log/slog"
 	"os"
-	"os/signal"
-	"syscall"
 
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/config"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/controllers/http/v1"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/state"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/state"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/config"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/postgresql"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/server"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/migrations"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/logger"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/postgresql"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/redis"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/server"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -47,7 +47,7 @@ func New() *App {
 
 	ctx := context.TODO()
 	
-	db, err := postgresql.ConnectToDb(ctx, postgresql.Config{
+	db, err := postgresql.ConnectToDb(ctx, &postgresql.Config{
 		Username: viper.GetString("db.username"),
 		Password: os.Getenv("POSTGRES_PASSWORD"),
 		DBName:   viper.GetString("db.dbname"),
@@ -66,7 +66,7 @@ func New() *App {
 		slog.Error("Can`t migrate db scheme. Error:", err)
 	}
 
-	redis, err := redis.ConnectToRedis(ctx, redis.Config{
+	redis, err := redis.ConnectToRedis(ctx, &redis.Config{
 		Host: viper.GetString("redis.host"),
 		Port: viper.GetString("redis.port"),
 		Password: os.Getenv("REDIS_PASSWORD"),

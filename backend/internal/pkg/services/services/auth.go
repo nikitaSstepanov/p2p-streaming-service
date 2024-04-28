@@ -1,12 +1,12 @@
 package services
 
 import (
-	"fmt"
 	"time"
+	"fmt"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/spf13/viper"
 )
 
 type Auth struct {}
@@ -37,8 +37,8 @@ func (a *Auth) GenerateToken(username string) (string, error) {
 		username,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-			Issuer: viper.GetString("jwt.issuer"),
-			Audience: []string{viper.GetString("jwt.audience")},
+			Issuer:    viper.GetString("jwt.issuer"),
+			Audience:  []string{viper.GetString("jwt.audience")},
 		},
 	}
 	

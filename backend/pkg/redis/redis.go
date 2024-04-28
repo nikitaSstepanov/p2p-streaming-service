@@ -9,13 +9,13 @@ import (
 )
 
 type Config struct {
-	Host string
-	Port string
-	Password string
-	DBNumber string
+	Host      string
+	Port      string
+	Password  string
+	DBNumber  string
 }
 
-func GetConfig(cfg Config) (*redis.Options, error) {
+func GetConfig(cfg *Config) (*redis.Options, error) {
 	db, err := strconv.Atoi(cfg.DBNumber)
 
 	if err != nil {
@@ -29,7 +29,7 @@ func GetConfig(cfg Config) (*redis.Options, error) {
 	}, nil
 }
 
-func ConnectToRedis(ctx context.Context, cfg Config) (*redis.Client, error) {
+func ConnectToRedis(ctx context.Context, cfg *Config) (*redis.Client, error) {
 	config, err := GetConfig(cfg)
 
 	if err != nil {

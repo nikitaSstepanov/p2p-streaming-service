@@ -1,5 +1,5 @@
 package dto
 
 type TokenResult struct {
-	Token string
+	Token string `json:"token"`
 }

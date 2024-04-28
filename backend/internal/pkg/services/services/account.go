@@ -4,23 +4,21 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services/dto/users"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
+	"github.com/gin-gonic/gin"
 )
 
 type Account struct {
 	Storage *storage.Storage
-	Auth *Auth
+	Auth    *Auth
 }
-
-
 
 func NewAccount(storage *storage.Storage, auth *Auth) *Account {
 	return &Account{
 		Storage: storage,
-		Auth: auth,
+		Auth:    auth,
 	}
 }
 
@@ -80,7 +78,7 @@ func (a *Account) Create(ctx *gin.Context) {
 	user := &entities.User{
 		Username: data.Username,
 		Password: password,
-		Role: "USER",
+		Role:     "USER",
 	}
 
 	a.Storage.Users.Create(ctx, user)
