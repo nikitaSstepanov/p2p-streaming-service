@@ -59,8 +59,7 @@ func (m *Movies) CreateMovie(ctx context.Context, movie *entities.Movie) {
 }
 
 func (m *Movies) UpdateMovie(ctx context.Context, movie *entities.Movie) {
-	fmt.Println(movie)
-	query := fmt.Sprintf("UPDATE %s SET fileVersion = %d, paths = '%s' WHERE id = %d;", moviesTable, movie.FileVersion, movie.Paths, movie.Id)
+	query := fmt.Sprintf("UPDATE %s SET fileVersion = %d, paths = '%s', name = '%s' WHERE id = %d;", moviesTable, movie.FileVersion, movie.Paths, movie.Name, movie.Id)
 
 	m.db.QueryRow(ctx, query)
 }

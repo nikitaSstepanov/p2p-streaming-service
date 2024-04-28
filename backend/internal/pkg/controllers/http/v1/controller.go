@@ -41,11 +41,17 @@ func (c *Controller) InitRoutes() *gin.Engine {
 
 		admin := api.Group("/admin")
 		{
-			admin.POST("/add-admin", c.Services.Admin.AddAdmin)
-
 			movies := admin.Group("/movies") 
 			{
 				movies.POST("/new", c.Services.Admin.CreateMovie)
+				movies.PATCH("/edit", c.Services.Admin.EditMovie)
+			}
+
+			admins := admin.Group("/admins")
+			{
+				admins.GET("/", c.Services.Admin.GetAdmins)
+				admins.PATCH("/add", c.Services.Admin.AddAdmin)
+				admins.PATCH("/remove", c.Services.Admin.RemoveAdmin)
 			}
 		}
 	}

@@ -7,7 +7,7 @@ import (
 	"os"
 	"io"
 
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services/dto/users"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services/dto/admin"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
 	"github.com/gin-gonic/gin"
@@ -24,6 +24,39 @@ func NewAdmin(storage *storage.Storage, auth *Auth) *Admin {
 		Storage: storage,
 		Auth:    auth,
 	}
+}
+
+func (a *Admin) GetAdmins(ctx *gin.Context) {
+	admin := a.checkAccess(ctx, "SUPER_ADMIN")
+
+	if admin.Id == 0 {
+		return
+	}
+
+	var result []dto.AdminDto
+
+	admins := a.Storage.Users.GetUsersByRole(ctx, "ADMIN")
+	superAdmins := a.Storage.Users.GetUsersByRole(ctx, "SUPER_ADMIN")
+
+	for i := 0; i < len(*admins); i++ {
+		toAdd := dto.AdminDto{
+			Username: (*admins)[i].Username,
+			IsSuper:  false,
+		}
+
+		result = append(result, toAdd)
+	}
+
+	for i := 0; i < len(*superAdmins); i++ {
+		toAdd := dto.AdminDto{
+			Username: (*superAdmins)[i].Username,
+			IsSuper:  true,
+		}
+
+		result = append(result, toAdd)
+	}
+
+	ctx.JSON(http.StatusOK, result)
 }
 
 func (a *Admin) AddAdmin(ctx *gin.Context) {
@@ -61,6 +94,44 @@ func (a *Admin) AddAdmin(ctx *gin.Context) {
 	a.Storage.Users.Update(ctx, user)
 
 	ctx.JSON(http.StatusOK, "Role is asigned.")
+}
+
+func (a *Admin) RemoveAdmin(ctx *gin.Context) {
+	admin := a.checkAccess(ctx, "SUPER_ADMIN")
+
+	if admin.Id == 0 {
+		return
+	}
+
+	var body dto.RemoveAdminDto
+
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, "Incorrect data.")
+		return
+	}
+
+	user := a.Storage.Users.GetUser(ctx, body.Username)
+
+	if user.Id == 0 {
+		ctx.JSON(http.StatusNotFound, "User wasn`t found.")
+		return
+	}
+
+	if user.Username == admin.Username {
+		ctx.JSON(http.StatusBadRequest, "It is your username.")
+		return
+	}
+
+	if user.Username == "admin" {
+		ctx.JSON(http.StatusBadRequest, "You can`t demote user 'admin'.")
+		return
+	}
+
+	user.Role = "USER"
+
+	a.Storage.Users.Update(ctx, user)
+
+	ctx.JSON(http.StatusOK, "Demoted to the user.")
 }
 
 func (a *Admin) CreateMovie(ctx *gin.Context) {
@@ -138,6 +209,96 @@ func (a *Admin) CreateMovie(ctx *gin.Context) {
 	a.Storage.Movies.CreateMovie(ctx, movie)
 
 	ctx.JSON(http.StatusCreated, "Created.")
+}
+
+func (a *Admin) EditMovie(ctx *gin.Context) {
+	admin := a.checkAccess(ctx, "ADMIN", "SUPER_ADMIN")
+
+	if admin.Id == 0 {
+		return
+	}
+
+	form, err := ctx.MultipartForm()
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, "Incorrect data.")
+		return
+	}
+
+	movieId, isFound := form.Value["movieId"]
+
+	if !isFound {
+		ctx.JSON(http.StatusBadRequest, "MovieId is required.")
+		return
+	}
+
+	movie := a.Storage.Movies.GetMovieById(ctx, movieId[0])
+
+	if movie.Id == 0 {
+		ctx.JSON(http.StatusNotFound, "This movie wasn`t found.")
+		return
+	}
+
+	name, isFound := form.Value["name"]
+
+	if isFound {
+		movie.Name = name[0]
+	}
+
+	files, isFound := form.File["files"]
+
+	if isFound && len(files) != 0 {
+		paths := make([]string, 0)
+
+		for i := 0; i < len(files); i++ {
+			file := files[0]
+
+			if file.Size <= 0 {
+				ctx.JSON(http.StatusBadRequest, "Incorrect data.")
+				return
+			}
+
+			parts := strings.Split(file.Filename, ".")
+
+			if parts[len(parts) - 1] != "torrent" {
+				ctx.JSON(http.StatusBadRequest, "Incorrect data.")
+				return
+			}
+		}
+
+		for i := 0; i < len(files); i++ {
+			file := files[i]
+			fileName := uuid.New().String() + ".torrent"
+
+			toSave, err := file.Open()
+
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, "Incorrect data.")
+				return
+			}
+
+			local, err := os.OpenFile("files/" + fileName, os.O_CREATE|os.O_RDWR, 0644)
+
+			io.Copy(local, toSave)
+
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, "Incorrect data.")
+				return
+			}
+
+			paths = append(paths, fileName)
+		}
+
+		old := movie.Paths
+
+		new := old + ";" + strings.Join(paths, ";")
+
+		movie.Paths = new
+	}
+
+	a.Storage.Movies.UpdateMovie(ctx, movie)
+
+	ctx.JSON(http.StatusOK, "Updated.")
 }
 
 func (a *Admin) checkAccess(ctx *gin.Context, roles ...string) *entities.User {

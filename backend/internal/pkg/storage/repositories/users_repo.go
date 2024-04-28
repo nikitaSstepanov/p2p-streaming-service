@@ -34,6 +34,24 @@ func (u *Users) GetUser(ctx context.Context, username string) *entities.User {
 	return &user
 }
 
+func (u *Users) GetUsersByRole(ctx context.Context, role string) *[]entities.User {
+	var users []entities.User
+
+	var user entities.User
+
+	query := fmt.Sprintf("SELECT * FROM %s WHERE role = '%s';", usersTable, role)
+
+	rows, _ := u.db.Query(ctx, query)
+
+	for rows.Next() {
+		rows.Scan(&user.Id, &user.Username, &user.Password, &user.Role)
+
+		users = append(users, user)
+	}
+
+	return &users
+}
+
 func (u *Users) Create(ctx context.Context, user *entities.User) {
 	query := fmt.Sprintf("INSERT INTO %s (username, password, role) VALUES ('%s', '%s', '%s') ON CONFLICT DO NOTHING;", usersTable, user.Username, user.Password, user.Role)
 
