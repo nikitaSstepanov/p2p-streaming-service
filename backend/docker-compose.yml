@@ -17,7 +17,20 @@ services:
     networks:
       - internal
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - ./volumes/pgdata:/var/lib/postgresql/data
+
+  redis:
+    container_name: streaming_service_redis
+    image: redis:alpine3.19
+    env_file:
+      - .env
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASES: 1
+    networks:
+      - internal
+    volumes:
+      - ./volumes/rsdata:/data
 
   app:
     container_name: streaming_service
@@ -31,11 +44,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - internal
       - external
     volumes:
-      - ./appdata:/var/lib/app/data
+      - ./volumes/appdata:/var/lib/app/data
 
   nginx:
     container_name: nginx
@@ -52,10 +67,11 @@ services:
     ports:
       - 80:80
 
+volumes:
+  appdata:
+  pgdata:
+  rsdata:
+
 networks:
   internal:
   external:
-
-volumes:
-  pgdata:
-  appdata:

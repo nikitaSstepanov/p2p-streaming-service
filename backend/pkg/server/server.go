@@ -18,7 +18,6 @@ type Server struct {
 }
 
 func New(handler http.Handler, url string) *Server {
-
 	httpServer := &http.Server{
 		ReadTimeout:  readTimeout,
 		WriteTimeout: writeTimeout,
@@ -26,11 +25,9 @@ func New(handler http.Handler, url string) *Server {
 		Addr:         url,
 	}
 
-	server := &Server{
+	return &Server{
 		server: httpServer,
 	}
-
-	return server
 }
 
 func (s *Server) Start() error {

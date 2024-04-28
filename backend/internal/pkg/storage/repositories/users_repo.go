@@ -29,13 +29,13 @@ func (u *Users) GetUser(ctx context.Context, username string) *entities.User {
 
 	row := u.db.QueryRow(ctx, query)
 
-	row.Scan(&user.Id, &user.Username, &user.Password)
+	row.Scan(&user.Id, &user.Username, &user.Password, &user.Role)
 
 	return &user
 }
 
 func (u *Users) Create(ctx context.Context, user *entities.User) {
-	query := fmt.Sprintf("INSERT INTO %s (username, password) VALUES ('%s', '%s') ON CONFLICT DO NOTHING;", usersTable, user.Username, user.Password)
+	query := fmt.Sprintf("INSERT INTO %s (username, password, role) VALUES ('%s', '%s', '%s') ON CONFLICT DO NOTHING;", usersTable, user.Username, user.Password, user.Role)
 
 	u.db.QueryRow(ctx, query)
 }

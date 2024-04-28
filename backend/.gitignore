@@ -1,4 +1,4 @@
-appdata
-pgdata
+volumes
+files
 logs
 .env

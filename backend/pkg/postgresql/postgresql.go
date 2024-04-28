@@ -51,6 +51,6 @@ func ConnectToDb(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
 	if err := db.Ping(ctx); err != nil {
 		return nil, err
 	}
-
+	
 	return db, nil
 }

@@ -1,5 +1,4 @@
-pgdata
-appdata
+volumes
 logs
 .gitignore
 Dockerfile*

@@ -11,13 +11,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/config"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/controllers"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/controllers/http/v1"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/state"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/migrations"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/logger"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/postgresql"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/redis"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/server"
 	"github.com/spf13/viper"
 )
@@ -65,6 +66,19 @@ func New() *App {
 		slog.Error("Can`t migrate db scheme. Error:", err)
 	}
 
+	redis, err := redis.ConnectToRedis(ctx, redis.Config{
+		Host: viper.GetString("redis.host"),
+		Port: viper.GetString("redis.port"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DBNumber: viper.GetString("redis.db"),
+	})
+	
+	if err != nil {
+		slog.Error("Can`t conntect redis. Error:", err)
+	} else {
+		slog.Info("Redis is connected.")
+	}
+
 	state := state.New()
 
 	url := viper.GetString("url")
@@ -73,7 +87,7 @@ func New() *App {
 
 	app.Storage = storage.New(db)
 
-	app.Services = services.New(app.Storage, state)
+	app.Services = services.New(app.Storage, state, redis)
 
 	app.Controller = controllers.New(app.Services)
 

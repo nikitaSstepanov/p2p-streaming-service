@@ -4,8 +4,15 @@ db:
   username: "admin"
   host: "localhost"
   port: "5432"
-  dbname: "cloud_storage_db"
+  dbname: "db"
   sslmode: "disable"
+
+redis:
+  host: "localhost"
+  port: "6379"
+  db: "1"
 
 jwt:
   key: "p2p-streaming-service-secret-jwt-golang-53237770120202024"
+  issuer: "p2p-streaming-service-api"
+  audience: "clients"
