@@ -22,10 +22,10 @@ func NewAdapters(db postgresql.Client) *Adapters {
 	}
 }
 
-func (a *Adapters) GetAdapter(ctx context.Context, movieId string, version uint64) *entities.Adapter {
+func (a *Adapters) GetAdapter(ctx context.Context, movieId uint64, version uint64) *entities.Adapter {
 	var adapter entities.Adapter
 
-	query := fmt.Sprintf("SELECT * FROM %s WHERE movieId = %s AND version = %d ;", adaptersTable, movieId, version)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE movieId = %d AND version = %d ;", adaptersTable, movieId, version)
 
 	row := a.db.QueryRow(ctx, query)
 

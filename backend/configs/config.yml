@@ -2,13 +2,13 @@ url: ":80"
 
 db:
   username: "admin"
-  host: "streaming_service_db"
+  host: "localhost"
   port: "5432"
   dbname: "db"
   sslmode: "disable"
 
 redis:
-  host: "streaming_service_redis"
+  host: "localhost"
   port: "6379"
   db: "1"
 

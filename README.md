@@ -5,14 +5,11 @@
 
 It is streaming service based on bittorrent. We take the data from the torrent.
 
-This service has two parts: website and backend. 
-
-It allows users to watch movies available on the service, create playlists. Administrators can add new movies and edit old ones.
+It allows users to watch movies available on the service, create playlists and do a lot more. Administrators can add new movies and edit old ones.
 
 Developers: 
 
    1) Backend: <a href="https://github.com/Reprr">Lev</a>, <a href="https://github.com/nikitaSstepanov">Nikita</a>
-   2) Frontend: <a href="https://github.com">Ural</a>
 
 P.S. We don`t use piratical resources. We respect copyrights and urge you not to use the service with stolen movies and other resources.
 
@@ -26,27 +23,25 @@ Launch:
    
    All paths specified in this section are relative to the "backend" folder
    
-   1) Setup configuration of the project (config/config.yml) or use default values.
+   1) Set up configuration of the project (configs/config.yml) or use default values.
+
+   2) Set up configuration of docker (docker-compose.yml) if you use it.
       
-   2) If you don`t use docker, raise the postgres and redis databases in advance (do not forget that app will try to connect to the db with the environment specified in config/config.yml).
+   3) If you don`t use docker, raise the postgres and redis databases in advance (do not forget that app will try to connect to the dbs with the environment specified in configs/config.yml).
       
-   3) Set up the environment (create ".env" file) according to the example in the ".env.example" file or rename ".env.example" to ".env" to use default values.
+   4) Set up the environment (create ".env" file) according to the example in the ".env.example" file or rename ".env.example" to ".env" to use default values.
    
-   4) Navigate to the "backend" folder in the terminal (relative to the root of the project) and enter the command:
+   5) Navigate to the "backend" folder in the terminal (relative to the root of the project) and enter the command:
 
       ```docker-compose up```
-
-   5) If you don`t use docker, enter:
+    
+      If you don`t use docker, enter:
 
       ```go run ./cmd/p2p-streaming-service/main.go```
 
 Usage:
 
-Usage will be later...
-
-### Frontend
-
-Frontend will be later...
+To learn useage of backend you can go to OpenAPI (backend/docs/openapi.yml).
 
 ### Stack
 
@@ -67,5 +62,3 @@ Frontend will be later...
         <img width="70" alt="Redis" src="https://logodix.com/logo/631151.png"/>
     </a>
 </p>
-
-

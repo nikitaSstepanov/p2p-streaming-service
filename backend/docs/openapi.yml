@@ -1,0 +1,45 @@
+openapi: 3.1.0
+
+info:
+    title: P2P Streaming service - API 
+    version: 1.0.0
+    description:
+        It is streaming service based on bittorrent. We take the data from the torent.
+        
+        
+        It allows users to watch movies available on the service, create playlists and do a lot more. Administrators can add new movies and edit old ones.
+    
+servers: 
+  - url: http://localhost/api
+
+tags:
+    - name: Movies
+      description: Endpoints of movies
+    - name: Account
+      description: Endpoints of account
+    - name: Admin
+      description: Endpoints of administrators
+
+paths:
+    /movies:
+        get: 
+          tags: 
+            - Movies
+          summary: Getting the list of movies
+          description: Getting the list of movie with pagination
+    /movies/{movieId}:
+        get:
+            tags: 
+              - Movies
+            summary: Getting the movie
+            description: Getting the movie by movieId
+            parameters:
+                - name: movieId
+                  in: path
+                  description: Id of movie
+                  required: true
+                  schema:
+                    type: integer
+                    format: int64
+        
+

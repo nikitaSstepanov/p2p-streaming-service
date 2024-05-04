@@ -16,10 +16,25 @@ CREATE TABLE movies (
 
 CREATE TABLE adapters (
     id SERIAL PRIMARY KEY,
-    movieId BIGINT,
+    movieId SERIAL,
     version INTEGER,
     length BIGINT,
-    pieceLength BIGINT
+    pieceLength BIGINT,
+    FOREIGN KEY (movieId) REFERENCES movies (id) ON DELETE CASCADE
+);
+
+CREATE TABLE playlists (
+    id SERIAL PRIMARY KEY,
+    userId SERIAL,
+    title VARCHAR(255),
+    FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE movies_playlists (
+    playlistId SERIAL,
+    movieId SERIAL,
+    FOREIGN KEY (palylistId) REFERENCES playlists (id) ON DELETE CASCADE,
+    FOREIGN KEY (movieId) REFERENCES movies (id) ON DELETE CASCADE
 );
 
 INSERT INTO users (username, password, role) VALUES ('admin', '$2a$10$uO5L5aVpKAnteAwJgA3e0eo.pOdGclPLodcB8yKAkIEELTAeIz/ii', 'SUPER_ADMIN');

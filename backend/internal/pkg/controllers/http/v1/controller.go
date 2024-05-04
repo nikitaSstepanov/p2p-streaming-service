@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services"
 	"github.com/gin-gonic/gin"
 )
@@ -20,9 +18,9 @@ func New(services *services.Services) *Controller {
 func (c *Controller) InitRoutes() *gin.Engine {
 	router := gin.New()
 
-	router.GET("ping", pingFunc)
+	router.GET("ping", c.Services.PingFunc)
 	
-	api := router.Group("/api")
+	api := router.Group("/api/v1")
 	{
 		movies := api.Group("/movies")
 		{
@@ -30,6 +28,15 @@ func (c *Controller) InitRoutes() *gin.Engine {
 			movies.GET("/:id", c.Services.Movies.GetMovieById)
 			movies.GET("/:id/start", c.Services.Movies.StartWatch)
 			movies.GET("/:id/:fileId/:chunkId", c.Services.Movies.GetMovieChunck)
+
+			comments := movies.Group("/:id/comments")
+			{
+				comments.GET("/", c.Services.Comments.GetComments)
+				comments.GET("/:commentId", c.Services.Comments.GetCommentById)
+				comments.POST("/new", c.Services.Comments.CreateComment)
+				comments.PATCH("/:commentId/edit", c.Services.Comments.EditComment)
+				comments.DELETE("/:commentId/del", c.Services.Comments.DeleteComment)
+			}
 		}
 
 		account := api.Group("/account")
@@ -37,6 +44,15 @@ func (c *Controller) InitRoutes() *gin.Engine {
 			account.GET("/", c.Services.Account.GetAccount)
 			account.POST("/new", c.Services.Account.Create)
 			account.POST("/sign-in", c.Services.Account.SignIn)
+
+			playlists := account.Group("/playlists")
+			{
+				playlists.GET("/", c.Services.Playlists.GetPlaylists)
+				playlists.GET("/:id", c.Services.Playlists.GetPlaylistById)
+				playlists.POST("/new", c.Services.Playlists.CreatePlaylist)
+				playlists.PATCH("/:id/edit", c.Services.Playlists.EditPlaylist)
+				playlists.DELETE("/:id/del", c.Services.Playlists.DeletePlaylist)
+			}
 		}
 
 		admin := api.Group("/admin")
@@ -57,8 +73,4 @@ func (c *Controller) InitRoutes() *gin.Engine {
 	}
 
 	return router
-}
-
-func pingFunc(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, "ok")
 }

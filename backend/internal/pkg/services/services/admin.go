@@ -1,27 +1,33 @@
 package services
 
 import (
-	"net/http"
-	"strings"
-	"slices"
-	"os"
+	"context"
+	"fmt"
 	"io"
+	"net/http"
+	"os"
+	"slices"
+	"strings"
+	"time"
 
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services/dto/admin"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services/dto/admin"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
+	"github.com/redis/go-redis/v9"
 )
 
 type Admin struct {
 	Storage *storage.Storage
+	Redis   *redis.Client
 	Auth    *Auth
 }
 
-func NewAdmin(storage *storage.Storage, auth *Auth) *Admin {
+func NewAdmin(storage *storage.Storage, redis *redis.Client, auth *Auth) *Admin {
 	return &Admin{
 		Storage: storage,
+		Redis:   redis,
 		Auth:    auth,
 	}
 }
@@ -73,7 +79,7 @@ func (a *Admin) AddAdmin(ctx *gin.Context) {
 		return
 	}
 
-	user := a.Storage.Users.GetUser(ctx, body.Username)
+	user := a.findUser(ctx, body.Username)
 
 	if user.Id == 0 {
 		ctx.JSON(http.StatusNotFound, "User wasn`t found.")
@@ -91,7 +97,7 @@ func (a *Admin) AddAdmin(ctx *gin.Context) {
 		user.Role = "ADMIN"
 	}
 
-	a.Storage.Users.Update(ctx, user)
+	a.Storage.Users.Update(ctx, &user)
 
 	ctx.JSON(http.StatusOK, "Role is asigned.")
 }
@@ -110,7 +116,7 @@ func (a *Admin) RemoveAdmin(ctx *gin.Context) {
 		return
 	}
 
-	user := a.Storage.Users.GetUser(ctx, body.Username)
+	user := a.findUser(ctx, body.Username)
 
 	if user.Id == 0 {
 		ctx.JSON(http.StatusNotFound, "User wasn`t found.")
@@ -129,7 +135,7 @@ func (a *Admin) RemoveAdmin(ctx *gin.Context) {
 
 	user.Role = "USER"
 
-	a.Storage.Users.Update(ctx, user)
+	a.Storage.Users.Update(ctx, &user)
 
 	ctx.JSON(http.StatusOK, "Demoted to the user.")
 }
@@ -318,7 +324,7 @@ func (a *Admin) checkAccess(ctx *gin.Context, roles ...string) *entities.User {
 		return &entities.User{}
 	}
 
-	user := a.Storage.Users.GetUser(ctx, claims.Username)
+	user := a.findUser(ctx, claims.Username)
 
 	if user.Id == 0 {
 		ctx.JSON(http.StatusUnauthorized, "Incorrecct token.")
@@ -330,6 +336,24 @@ func (a *Admin) checkAccess(ctx *gin.Context, roles ...string) *entities.User {
 	if !found {
 		ctx.JSON(http.StatusForbidden, "Forbidden resource.")
 		return &entities.User{}
+	}
+
+	return &user
+}
+
+func (a *Admin) findUser(ctx context.Context, username string) entities.User {
+	var user entities.User
+
+	a.Redis.Get(ctx, fmt.Sprintf("users:%s", username)).Scan(&user)
+
+	if user.Id == 0 {
+		user = *(a.Storage.Users.GetUser(ctx, username))
+
+		if user.Id == 0 {
+			return entities.User{}
+		}
+
+		a.Redis.Set(ctx, fmt.Sprintf("users:%s", username), user, 1 * time.Hour)
 	}
 
 	return user

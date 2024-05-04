@@ -8,13 +8,15 @@ import (
 type Storage struct {
 	Movies    *repositories.Movies
 	Users     *repositories.Users
+	Playlists *repositories.Playlists
 	Adapters  *repositories.Adapters
 }
 
 func New(db *pgxpool.Pool) *Storage {
 	return &Storage{
-		Movies:   repositories.NewMovies(db),
-		Users:    repositories.NewUsers(db),
-		Adapters: repositories.NewAdapters(db),
+		Movies:    repositories.NewMovies(db),
+		Users:     repositories.NewUsers(db),
+		Playlists: repositories.NewPlaylists(db),
+		Adapters:  repositories.NewAdapters(db),
 	}
 }

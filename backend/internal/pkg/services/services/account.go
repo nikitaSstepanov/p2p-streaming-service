@@ -1,23 +1,29 @@
 package services
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services/dto/users"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
 	"github.com/gin-gonic/gin"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services/dto/users"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
+	"github.com/redis/go-redis/v9"
 )
 
 type Account struct {
 	Storage *storage.Storage
+	Redis   *redis.Client
 	Auth    *Auth
 }
 
-func NewAccount(storage *storage.Storage, auth *Auth) *Account {
+func NewAccount(storage *storage.Storage, redis *redis.Client, auth *Auth) *Account {
 	return &Account{
 		Storage: storage,
+		Redis:   redis,
 		Auth:    auth,
 	}
 }
@@ -39,7 +45,7 @@ func (a *Account) GetAccount(ctx *gin.Context) {
 		return
 	}
 
-	user := a.Storage.Users.GetUser(ctx, claims.Username)
+	user := a.findUser(ctx, claims.Username)
 
 	if user.Id == 0 {
 		ctx.JSON(http.StatusUnauthorized, "Incorrecct token.")
@@ -61,7 +67,7 @@ func (a *Account) Create(ctx *gin.Context) {
 		return
 	}
 
-	candidate := a.Storage.Users.GetUser(ctx, data.Username)
+	candidate := a.findUser(ctx, data.Username)
 
 	if candidate.Id != 0 {
 		ctx.JSON(http.StatusConflict, "This username is taken.")
@@ -98,7 +104,7 @@ func (a *Account) SignIn(ctx *gin.Context) {
 		return
 	}
 
-	user := a.Storage.Users.GetUser(ctx, body.Username)
+	user := a.findUser(ctx, body.Username)
 
 	if user.Id == 0 {
 		ctx.JSON(http.StatusUnauthorized, "Incorrect username or password.")
@@ -126,3 +132,20 @@ func (a *Account) SignIn(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
+func (a *Account) findUser(ctx context.Context, username string) entities.User {
+	var user entities.User
+
+	a.Redis.Get(ctx, fmt.Sprintf("users:%s", username)).Scan(&user)
+
+	if user.Id == 0 {
+		user = *(a.Storage.Users.GetUser(ctx, username))
+
+		if user.Id == 0 {
+			return entities.User{}
+		}
+
+		a.Redis.Set(ctx, fmt.Sprintf("users:%s", username), user, 1 * time.Hour)
+	}
+
+	return user
+}

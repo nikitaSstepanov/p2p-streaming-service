@@ -35,6 +35,12 @@ func New() *App {
 
 	slog.SetDefault(logger.Logger)
 
+	err := os.MkdirAll("files", 0777)
+	
+	if err != nil {
+		panic(err)
+	}
+
 	gin.SetMode(gin.TestMode)
 
 	if err := godotenv.Load(".env"); err != nil {
