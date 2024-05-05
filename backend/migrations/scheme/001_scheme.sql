@@ -33,7 +33,7 @@ CREATE TABLE playlists (
 CREATE TABLE movies_playlists (
     playlistId SERIAL,
     movieId SERIAL,
-    FOREIGN KEY (palylistId) REFERENCES playlists (id) ON DELETE CASCADE,
+    FOREIGN KEY (playlistId) REFERENCES playlists (id) ON DELETE CASCADE,
     FOREIGN KEY (movieId) REFERENCES movies (id) ON DELETE CASCADE
 );
 
@@ -46,3 +46,7 @@ DROP TABLE users;
 DROP TABLE movies;
 
 DROP TABLE adapters;
+
+DROP TABLE playlists;
+
+DROP TABLE movies_playlists;

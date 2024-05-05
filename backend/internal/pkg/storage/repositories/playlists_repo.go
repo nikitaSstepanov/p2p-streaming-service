@@ -88,7 +88,7 @@ func (p *Playlists) AddMovie(ctx context.Context, playlistId uint64, movieId uin
 }
 
 func (p *Playlists) RemoveMovie(ctx context.Context, playlistId uint64, movieId uint64) {
-	query := fmt.Sprintf("DELETE FROM %s WHERE playlistId = %d AND movieId = %d;", playlistsMoviesTable, playlistId, movieId)
+	query := fmt.Sprintf("DELETE FROM %s WHERE playlistId = %d AND movieId = %d ;", playlistsMoviesTable, playlistId, movieId)
 
 	p.db.QueryRow(ctx, query)
 }

@@ -6,4 +6,5 @@ Dockerfile*
 volumes
 files
 nginx
+docs
 logs

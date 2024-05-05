@@ -41,7 +41,7 @@ Launch:
 
 Usage:
 
-To learn useage of backend you can go to OpenAPI (backend/docs/openapi.yml).
+To learn usage of backend you can go to OpenAPI (backend/docs/openapi.yml).
 
 ### Stack
 
