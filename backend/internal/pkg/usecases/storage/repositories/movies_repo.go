@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage/entities"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/postgresql"
 )
 

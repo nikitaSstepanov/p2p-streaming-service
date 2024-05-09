@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage/entities"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/postgresql"
 )
 
@@ -69,7 +69,7 @@ func (p *Playlists) GetPlaylist(ctx context.Context, id string) *entities.Playli
 	return &playlist
 }
 
-func (p *Playlists) CreatePlaylist(ctx context.Context, playlist entities.Playlist) {
+func (p *Playlists) CreatePlaylist(ctx context.Context, playlist *entities.Playlist) {
 	query := fmt.Sprintf("INSERT INTO %s (userId, title) VALUES (%d, '%s');", playlistsTable, playlist.UserId, playlist.Title)
 
 	p.db.QueryRow(ctx, query)

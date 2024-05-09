@@ -1,45 +1,39 @@
 package services
 
 import (
-	"net/http"
 	"context"
-	"strings"
-	"strconv"
-	"math"
-	"time"
 	"fmt"
+	"math"
 	"os"
+	"strings"
+	"time"
 
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services/dto/movies"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage/entities"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/dto/movies"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/statuses"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/state"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage/entities"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/bittorrent/decode"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/bittorrent/p2p"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/state"
 	"github.com/redis/go-redis/v9"
-	"github.com/gin-gonic/gin"
 )
 
 type Movies struct {
-	Storage *storage.Storage
-	Redis   *redis.Client
-	State   *state.State
+	storage *storage.Storage
+	redis   *redis.Client
+	state   *state.State
 }
 
 func NewMovies(storage *storage.Storage, state *state.State, redis *redis.Client) *Movies {
 	return &Movies{
-		Storage: storage,
-		Redis:   redis,
-		State:   state,
+		storage: storage,
+		redis:   redis,
+		state:   state,
 	}
 }
 
-func (m *Movies) GetMovies(ctx *gin.Context) {
-	limit := ctx.DefaultQuery("limit", "5")
-
-	offset := ctx.DefaultQuery("offset", "0")
-
-	movies := m.Storage.Movies.GetAllMovies(ctx, limit, offset)
+func (m *Movies) GetMovies(ctx context.Context, limit string, offset string) (*[]dto.MovieDto, string) {
+	movies := m.storage.Movies.GetAllMovies(ctx, limit, offset)
 
 	var result []dto.MovieDto
 
@@ -56,17 +50,15 @@ func (m *Movies) GetMovies(ctx *gin.Context) {
 		result = make([]dto.MovieDto, 0)
 	}
 	
-	ctx.JSON(http.StatusOK, result)
+	return &result, statuses.OK
 }
 
-func (m *Movies) GetMovieById(ctx *gin.Context) {
-	movieId := ctx.Param("id")
+func (m *Movies) GetMovieById(ctx context.Context, movieId string) (*dto.MovieDto, string) {
 
 	movie, err := m.findMovie(ctx, movieId)
 
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, "This moive wasn`t found")
-		return
+		return nil, statuses.NotFound
 	}
 
 	result := dto.MovieDto{
@@ -74,76 +66,54 @@ func (m *Movies) GetMovieById(ctx *gin.Context) {
 		Name: movie.Name,
 	}
 
-	ctx.JSON(http.StatusOK, result)
+	return &result, statuses.OK
 }
 
-func (m *Movies) StartWatch(ctx *gin.Context) {
-	movieId := ctx.Param("id")
-
+func (m *Movies) StartWatch(ctx context.Context, movieId string) (*dto.ChunkDto, string) {
 	movie, err := m.findMovie(ctx, movieId)
 
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, "This moive wasn`t found")
-		return
+		return nil, statuses.NotFound
 	}
 
 	chunck, err := m.getChunck(ctx, movie, 0, true, -1)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, "Something going wrong....")
-		return
+		return nil, statuses.InternalError
 	}
 
-	ctx.JSON(http.StatusOK, chunck)
+	return chunck, statuses.OK
 }
 
-func (m *Movies) GetMovieChunck(ctx *gin.Context) {
-	movieId := ctx.Param("id")
-
+func (m *Movies) GetMovieChunck(ctx context.Context, movieId string, fileId int64, chunkId int) (*dto.ChunkDto, string) {
 	movie, err := m.findMovie(ctx, movieId)
 
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, "This moive wasn`t found")
-		return
-	}
-
-	fileId, err := strconv.ParseInt(ctx.Param("fileId"), 10, 64)
-
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, "fileId must be integer")
-		return
-	}
-
-	chunkId, err := strconv.Atoi(ctx.Param("chunkId"))
-
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, "chunkId must be integer")
-		return
+		return nil, statuses.NotFound
 	}
 
 	chunk, err := m.getChunck(ctx, movie, chunkId, false, fileId)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, "Something going wrong....")
-		return
+		return nil, statuses.InternalError
 	}
 
-	ctx.JSON(http.StatusOK, chunk)
+	return chunk, statuses.OK
 }
 
 func (m *Movies) findMovie(ctx context.Context, movieId string) (*entities.Movie, error) {
 	var movie entities.Movie
 
-	m.Redis.Get(ctx, fmt.Sprintf("movies:%s", movieId)).Scan(&movie)
+	m.redis.Get(ctx, fmt.Sprintf("movies:%s", movieId)).Scan(&movie)
 
 	if movie.Id == 0 {
-		movie = *m.Storage.Movies.GetMovieById(ctx, movieId)
+		movie = *m.storage.Movies.GetMovieById(ctx, movieId)
 
 		if movie.Id == 0 {
 			return nil, fmt.Errorf("404")
 		}
 
-		m.Redis.Set(ctx, fmt.Sprintf("movies:%s", movieId), movie, 4 * time.Hour)
+		m.redis.Set(ctx, fmt.Sprintf("movies:%s", movieId), movie, 4 * time.Hour)
 	}
 
 	return &movie, nil
@@ -152,11 +122,11 @@ func (m *Movies) findMovie(ctx context.Context, movieId string) (*entities.Movie
 func (m *Movies) getChunck(ctx context.Context, movie *entities.Movie, index int, changeExpires bool, fileId int64) (*dto.ChunkDto, error) {
 	var result dto.ChunkDto
 
-	(*m.State.Mutex).Lock()
+	(*m.state.Mutex).Lock()
 
-	movieTorrent, isInMap := (*m.State.Movies)[movie.Id] 
+	movieTorrent, isInMap := (*m.state.Movies)[movie.Id] 
 
-	(*m.State.Mutex).Unlock()
+	(*m.state.Mutex).Unlock()
 
 	var piece p2p.Piece
 
@@ -166,11 +136,11 @@ func (m *Movies) getChunck(ctx context.Context, movie *entities.Movie, index int
 		if (changeExpires) {
 			movieTorrent.Expires = time.Now().Local().Add(4 * time.Hour)
 
-			(*m.State.Mutex).Lock()
+			(*m.state.Mutex).Lock()
 
-			(*m.State.Movies)[movie.Id] = movieTorrent
+			(*m.state.Movies)[movie.Id] = movieTorrent
 
-			(*m.State.Mutex).Unlock()
+			(*m.state.Mutex).Unlock()
 		}
 
 		if fileId != int64(movie.FileVersion) && fileId != -1 {
@@ -223,9 +193,9 @@ func (m *Movies) getChunck(ctx context.Context, movie *entities.Movie, index int
 			paths = paths[firstIndex:]
 			movie.Paths = strings.Join(paths, ";")
 			movie.FileVersion += 1
-			m.Storage.Movies.UpdateMovie(ctx, movie)
-			m.Redis.Del(ctx, fmt.Sprintf("movies:%d", movie.Id))
-			m.Redis.Set(ctx, fmt.Sprintf("movies:%d", movie.Id), movie, 4 * time.Hour)
+			m.storage.Movies.UpdateMovie(ctx, movie)
+			m.redis.Del(ctx, fmt.Sprintf("movies:%d", movie.Id))
+			m.redis.Set(ctx, fmt.Sprintf("movies:%d", movie.Id), movie, 4 * time.Hour)
 		}
 
 		adapter := m.findAdapter(ctx, movie.Id, int64(movie.FileVersion))
@@ -238,8 +208,8 @@ func (m *Movies) getChunck(ctx context.Context, movie *entities.Movie, index int
 				PieceLength: uint64(torrent.PieceLength),
 			}
 
-			m.Storage.Adapters.CreateAdapter(ctx, adapter)
-			m.Redis.Set(ctx, fmt.Sprintf("adapters:%d:%d", movie.Id, movie.FileVersion), adapter, 4 * time.Hour)
+			m.storage.Adapters.CreateAdapter(ctx, adapter)
+			m.redis.Set(ctx, fmt.Sprintf("adapters:%d:%d", movie.Id, movie.FileVersion), adapter, 4 * time.Hour)
 		}
 
 		var toSave state.Movie
@@ -247,14 +217,14 @@ func (m *Movies) getChunck(ctx context.Context, movie *entities.Movie, index int
 		toSave.Torrent = &torrent
 		toSave.Expires = time.Now().Local().Add(4 * time.Hour)
 
-		(*m.State.Mutex).Lock()
+		(*m.state.Mutex).Lock()
 
-		(*m.State.Movies)[movie.Id] = toSave
+		(*m.state.Movies)[movie.Id] = toSave
 
-		(*m.State.Mutex).Unlock()
+		(*m.state.Mutex).Unlock()
 
 		if fileId != int64(movie.FileVersion) && fileId != -1 {
-			adapter := m.Storage.Adapters.GetAdapter(ctx, movie.Id, uint64(fileId))
+			adapter := m.storage.Adapters.GetAdapter(ctx, movie.Id, uint64(fileId))
 	
 			index = int(math.Floor((float64(adapter.PieceLength) / float64(adapter.Length) * float64(index) * float64(100)) / (float64(torrent.PieceLength) / float64(torrent.Length) * float64(100))))
 		}
@@ -277,16 +247,16 @@ func (m *Movies) getChunck(ctx context.Context, movie *entities.Movie, index int
 func (m *Movies) findAdapter(ctx context.Context, movieId uint64, fileId int64) *entities.Adapter {
 	var adapter entities.Adapter
 
-	m.Redis.Get(ctx, fmt.Sprintf("adapters:%d:%d", movieId, fileId)).Scan(&adapter)
+	m.redis.Get(ctx, fmt.Sprintf("adapters:%d:%d", movieId, fileId)).Scan(&adapter)
 
 	if adapter.Id == 0 {
-		adapter = *m.Storage.Adapters.GetAdapter(ctx, movieId, uint64(fileId))
+		adapter = *m.storage.Adapters.GetAdapter(ctx, movieId, uint64(fileId))
 
 		if adapter.Id == 0 {
 			return &entities.Adapter{}
 		}
 
-		m.Redis.Set(ctx, fmt.Sprintf("adapters:%d:%d", movieId, fileId), adapter, 4 * time.Hour)
+		m.redis.Set(ctx, fmt.Sprintf("adapters:%d:%d", movieId, fileId), adapter, 4 * time.Hour)
 	}
 
 	return &adapter

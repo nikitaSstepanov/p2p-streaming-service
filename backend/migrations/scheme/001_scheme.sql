@@ -30,6 +30,15 @@ CREATE TABLE playlists (
     FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
 );
 
+CREATE TABLE comments (
+    id SERIAL PRIMARY KEY,
+    movieId SERIAL,
+    userId SERIAL,
+    text VARCHAR(255),
+    FOREIGN KEY (movieId) REFERENCES movies (id) ON DELETE CASCADE,
+    FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
+);
+
 CREATE TABLE movies_playlists (
     playlistId SERIAL,
     movieId SERIAL,

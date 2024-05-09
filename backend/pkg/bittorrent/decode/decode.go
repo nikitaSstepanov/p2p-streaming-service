@@ -17,8 +17,8 @@ import (
 )
 
 type BencodeTrackerResponse struct {
-	Peers 		string 	`bencode: "peers"`
-	Interval 	int 	`bencode: "interval"`
+	Peers 		string 	`bencode:"peers"`
+	Interval 	int 	`bencode:"interval"`
 }
 
 type TorrentFile struct {

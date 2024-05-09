@@ -9,9 +9,9 @@ import (
 	"os"
 
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/controllers/http/v1"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/services"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/storage"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/state"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/services"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/state"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/config"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/postgresql"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/server"
@@ -92,7 +92,7 @@ func New() *App {
 	app := &App{}
 
 	app.Storage = storage.New(db)
-
+	
 	app.Services = services.New(app.Storage, state, redis)
 
 	app.Controller = controllers.New(app.Services)
@@ -100,7 +100,7 @@ func New() *App {
 	handler := app.Controller.InitRoutes()
 
 	app.Server = server.New(handler, url)
-
+	
 	return app
 }
 
