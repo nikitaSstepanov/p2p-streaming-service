@@ -3,11 +3,11 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/dto/users"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/responses"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/statuses"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/services"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/responses"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/dto/users"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/statuses"
+	"github.com/gin-gonic/gin"
 )
 
 type Account struct {

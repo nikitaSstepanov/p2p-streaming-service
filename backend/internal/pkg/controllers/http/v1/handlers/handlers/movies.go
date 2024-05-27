@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/services"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/responses"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/statuses"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/services"
+	"github.com/gin-gonic/gin"
 )
 
 type Movies struct {

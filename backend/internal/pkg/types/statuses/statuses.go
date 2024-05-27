@@ -1,11 +1,11 @@
 package statuses
 
 const (
-	OK = "OK"
-	BadRequest = "BADREQ"
-	NotFound = "NOTFND"
-	Unauthorize = "UNAUTH"
-	Conflict = "CNFLCT"
-	InternalError = "INTERR"
-	Forbidden = "FBDN"
+	OK            =  "OK"
+	BadRequest    =  "BADREQ"
+	NotFound      =  "NOTFND"
+	Unauthorize   =  "UNAUTH"
+	Conflict      =  "CONF"
+	InternalError =  "INTER"
+	Forbidden     =  "FN"
 )

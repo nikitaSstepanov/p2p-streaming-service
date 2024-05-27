@@ -4,13 +4,13 @@ info:
     title: P2P Streaming service - API 
     version: 1.0.0
     description:
-        It is streaming service based on bittorrent. We take the data from the torent.
+        It is streaming service based on bittorrent. We take the data from the torrent.
         
         
         It allows users to watch movies available on the service, create playlists and do a lot more. Administrators can add new movies and edit old ones.
     
 servers: 
-  - url: http://localhost/api
+  - url: http://localhost/api/v1
 
 tags:
     - name: Movies
@@ -27,6 +27,37 @@ paths:
             - Movies
           summary: Getting the list of movies
           description: Getting the list of movie with pagination
+          operationId: getMovies
+          parameters: 
+            - name: limit
+              in: query
+              description: Limit of films
+              required: false
+              schema:
+                type: integer
+                format: int64 
+            - name: offset
+              in: query
+              description: Offset of films
+              required: false
+              schema:
+                type: integer
+                format: int64 
+          responses: 
+            '200':
+              description: Successful getting of the movies
+              content: 
+                application/json: 
+                  schema: 
+                    type: array
+                    items: 
+                      $ref: '#/components/schemas/Movie'
+            '400':
+              description: Invalid Limit or Offset
+              content:
+                application/json: 
+                  schema: 
+                    $ref: '#/components/schemas/Error' 
     /movies/{movieId}:
         get:
             tags: 
@@ -41,5 +72,118 @@ paths:
                   schema:
                     type: integer
                     format: int64
-        
+            responses: 
+              '200':
+                description: Successful getting of the movie
+                content:
+                  application/json: 
+                    schema: 
+                      $ref: '#/components/schemas/Movie'  
+              '404':
+                description: Movie with such Id wasn`t found
+                content:
+                  application/json: 
+                    schema:
+                      $ref: '#/components/schemas/Error' 
+    /movies/{movieId}/start:
+        get:
+          tags:
+            - Movies
+          summary: Start watch the movie
+          description: Start watch the film with certain Id. Getting first chunck of the movie
+          parameters:
+            - name: movieId
+              in: path
+              description: Id of movie
+              required: true
+              schema:
+                type: integer
+                format: int64
+          responses:
+            '200':
+              description: Successful getting first chunck
+              content:
+                application/json: 
+                  schema:
+                    $ref: '#/components/schemas/Chunck' 
+            '404':
+                description: Movie with such Id wasn`t found
+                content:
+                  application/json: 
+                    schema:
+                      $ref: '#/components/schemas/Error' 
+    /movies/{movieId}/{version}/{chunkId}:
+        get:
+            tags:
+                - Movies
+            summary: Getting the chunck
+            description: Getting the chunck by movieId, versionId and chunckId
+            parameters:
+                - name: movieId
+                  in: path
+                  description: Id of movie
+                  required: true
+                  schema:
+                    type: integer
+                    format: int64
+                - name: version
+                  in: path
+                  description: Technical data that you get from the field "version" from the response with the last chunck
+                  required: true
+                  schema:
+                    type: integer
+                    format: int64
+                - name: chunkId
+                  in: path
+                  description: Id of chunck
+                  required: true
+                  schema:
+                    type: integer
+                    format: int64
+            responses:
+                '200':
+                    description: Successful getting of the chunck
+                    content:
+                        application/json: 
+                          schema:
+                              $ref: '#/components/schemas/Chunck' 
+                '404':
+                  description: Data with such Ids wasn`t found
+                  content:
+                    application/json: 
+                      schema:
+                        $ref: '#/components/schemas/Error' 
 
+components:
+  schemas: 
+    Movie:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          examples: [1]
+        name:
+          type: string
+          examples: ["Иван Васильевич меняет профессию"]
+    Chunck:
+      type: object
+      properties: 
+        buffer:
+          type: string
+          format: byte
+          examples: ["SHSUYAOPJSUPH1qAGAYGIGAG"]
+        next:
+          type: integer
+          format: int64
+          examples: [2]
+        version:
+          type: integer
+          format: int64
+          examples: [0]
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          examples: ["Incorrect data."]

@@ -82,7 +82,19 @@ func (p *Playlists) UpdatePlaylist(ctx context.Context, playlist entities.Playli
 }
 
 func (p *Playlists) AddMovie(ctx context.Context, playlistId uint64, movieId uint64) {
-	query := fmt.Sprintf("INSERT INTO %s (playlistId, movieId) VALUES (%d, %d) ON CONFLICT DO NOTHING;", playlistsMoviesTable, playlistId, movieId)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE playlistId = %d AND movieId = %d ;", playlistsMoviesTable, playlistId, movieId)
+
+	row := p.db.QueryRow(ctx, query)
+
+	var movie entities.PlaylistMovies
+
+	row.Scan(&movie.PlaylistId, &movie.MovieId)
+	
+	if movie.MovieId != 0 {
+		return
+	}
+
+	query = fmt.Sprintf("INSERT INTO %s (playlistId, movieId) VALUES (%d, %d) ON CONFLICT DO NOTHING;", playlistsMoviesTable, playlistId, movieId)
 
 	p.db.QueryRow(ctx, query)
 }

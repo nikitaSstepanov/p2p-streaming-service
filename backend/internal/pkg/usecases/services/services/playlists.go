@@ -2,16 +2,16 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
+	"fmt"
 
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage/entities"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/dto/playlists"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/responses"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/statuses"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage/entities"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -148,6 +148,8 @@ func (p *Playlists) EditPlaylist(ctx context.Context, header string, id string, 
 			}
 
 			p.storage.Playlists.AddMovie(ctx, playlist.Id, movie.Id)
+
+			p.redis.Del(ctx, fmt.Sprintf("playlists:%s", id))
 		}
 	}
 
@@ -160,6 +162,8 @@ func (p *Playlists) EditPlaylist(ctx context.Context, header string, id string, 
 			}
 
 			p.storage.Playlists.RemoveMovie(ctx, playlist.Id, movie.Id)
+
+			p.redis.Del(ctx, fmt.Sprintf("playlists:%s", id))
 		}
 	}
 

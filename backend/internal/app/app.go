@@ -35,10 +35,8 @@ func New() *App {
 
 	slog.SetDefault(logger.Logger)
 
-	err := os.MkdirAll("files", 0777)
-	
-	if err != nil {
-		panic(err)
+	if err := os.MkdirAll("files", 0777); err != nil {
+		slog.Error("Can`t init files directory. Error:", err)
 	}
 
 	gin.SetMode(gin.TestMode)

@@ -59,3 +59,5 @@ DROP TABLE adapters;
 DROP TABLE playlists;
 
 DROP TABLE movies_playlists;
+
+DROP TABLE comments;

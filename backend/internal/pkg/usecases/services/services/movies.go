@@ -2,17 +2,17 @@ package services
 
 import (
 	"context"
-	"fmt"
-	"math"
-	"os"
 	"strings"
+	"math"
 	"time"
+	"fmt"
+	"os"
 
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage/entities"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/dto/movies"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/statuses"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/state"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage/entities"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/bittorrent/decode"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/bittorrent/p2p"
 	"github.com/redis/go-redis/v9"

@@ -1,22 +1,22 @@
 package services
 
 import (
+	"mime/multipart"
 	"context"
+	"strings"
+	"slices"
+	"time"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"os"
-	"slices"
-	"strings"
-	"time"
 
-	"github.com/google/uuid"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage/entities"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/dto/admin"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/responses"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/statuses"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage/entities"
 	"github.com/redis/go-redis/v9"
+	"github.com/google/uuid"
 )
 
 type Admin struct {

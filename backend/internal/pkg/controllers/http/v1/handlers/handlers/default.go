@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/types/responses"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,5 +14,9 @@ func NewDefault() *Default {
 }
 
 func (d *Default) Ping(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, "pong")
+	result := &responses.Message{
+		Message: "pong",
+	}
+
+	ctx.JSON(http.StatusOK, result)
 }

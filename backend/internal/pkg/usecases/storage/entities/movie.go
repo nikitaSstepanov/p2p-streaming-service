@@ -9,8 +9,8 @@ type Movie struct {
 	FileVersion  uint64  `json:"fileVersion"`
 }
 
-func (m Movie) MarshalBinary() ([]byte, error) {
-	return json.Marshal(m)
+func (m *Movie) MarshalBinary() ([]byte, error) {
+	return json.Marshal(&m)
 }
 
 func (m *Movie) UnmarshalBinary(data []byte) error {
