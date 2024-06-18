@@ -9,7 +9,7 @@ It allows users to watch movies available on the service, create playlists and d
 
 Developers: 
 
-   1) Backend: <a href="https://github.com/Reprr">Lev</a>, <a href="https://github.com/nikitaSstepanov">Nikita</a>
+   1) Backend: <a href="https://github.com/nikitaSstepanov">Nikita</a>, <a href="https://github.com/Reprr">Lev</a>
 
 P.S. We don`t use piratical resources. We respect copyrights and urge you not to use the service with stolen movies and other resources.
 
@@ -42,23 +42,3 @@ Launch:
 Usage:
 
 To learn usage of backend you can go to OpenAPI (backend/docs/openapi.yml).
-
-### Stack
-
-<p>
-    <a href="https://go.dev">
-        <img width=70 alt="GO" src="https://logodix.com/logo/2142682.png"/>
-    </a>
-    <a href="https://www.docker.com">
-        <img width="50" alt="Docker" src="https://logodix.com/logo/826596.png"/>
-    </a>
-    <a href="https://www.postgresql.org">
-        <img width="50" alt="PG" src="https://logodix.com/logo/2106569.png">
-    </a>
-    <a href="https://nginx.org">
-        <img width="70" alt="Nginx" src="https://logodix.com/logo/1638878.png"/>
-    </a>
-    <a href="https://redis.io">
-        <img width="70" alt="Redis" src="https://logodix.com/logo/631151.png"/>
-    </a>
-</p>

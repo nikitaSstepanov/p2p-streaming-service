@@ -153,6 +153,46 @@ paths:
                     application/json: 
                       schema:
                         $ref: '#/components/schemas/Error' 
+    /account:
+        get:
+            tags:
+                - Account
+            summary: Getting of own Account
+            description: Getting of own account with jwt token
+            security: 
+              - ApiKey: []
+            responses: 
+              '200':
+                description: Successful getting of the account
+                content: 
+                    application/json: 
+                        schema: 
+                          $ref: '#/components/schemas/Account'
+              '401':
+                description: Incorrect token
+                content:
+                  application/json: 
+                    schema:
+                      $ref: '#/components/schemas/Error' 
+    /account/new:
+        post:
+            tags:
+                - Account
+            summary: Creating of profile
+            description: Creating of new profile
+            requestBody:
+                description: New account data
+                content:
+                    application/json: 
+                      schema: 
+                        $ref: '#/components/schemas/NewAccount'
+            responses: 
+              '201':
+                description: Acconut was created
+                content:
+                    application/json: 
+                        schema: 
+                          $ref: '#/components/schemas/Account'
 
 components:
   schemas: 
@@ -181,9 +221,30 @@ components:
           type: integer
           format: int64
           examples: [0]
+    Account:
+        type: object
+        properties: 
+            username:
+                type: string
+                examples: ["kreativny228"]
+    NewAccount:
+        type: object
+        properties: 
+            username:
+                type: string
+                examples: ["kreativny228"]
+            password:
+                type: string
+                examples: ["root"]
     Error:
       type: object
       properties:
         error:
           type: string
           examples: ["Incorrect data."]
+  securitySchemes: 
+    ApiKey:
+      description: Jwt api key
+      type: apiKey
+      name: api-key
+      in: header
