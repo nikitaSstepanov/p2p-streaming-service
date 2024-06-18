@@ -23,9 +23,9 @@ func GetConfig(cfg *Config) (*redis.Options, error) {
 	}
 
 	return &redis.Options{
-		Addr: fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
+		Addr:     fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
 		Password: cfg.Password,
-		DB: db,
+		DB:       db,
 	}, nil
 }
 

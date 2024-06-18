@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/controllers/http/v1"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/services"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/storage"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/pkg/usecases/state"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/controllers/http/v1"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/usecases/services"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/usecases/storage"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/usecases/state"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/config"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/postgresql"
 	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/server"
@@ -39,7 +39,7 @@ func New() *App {
 		slog.Error("Can`t init files directory. Error:", err)
 	}
 
-	gin.SetMode(gin.TestMode)
+	gin.SetMode(gin.ReleaseMode)
 
 	if err := godotenv.Load(".env"); err != nil {
 		slog.Error("Can`t load env. Error:", err)
@@ -71,8 +71,8 @@ func New() *App {
 	}
 
 	redis, err := redis.ConnectToRedis(ctx, &redis.Config{
-		Host: viper.GetString("redis.host"),
-		Port: viper.GetString("redis.port"),
+		Host:     viper.GetString("redis.host"),
+		Port:     viper.GetString("redis.port"),
 		Password: os.Getenv("REDIS_PASSWORD"),
 		DBNumber: viper.GetString("redis.db"),
 	})
