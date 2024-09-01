@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	a := app.New()
+	a := app.New("config/config.yaml")
 
 	a.Run()
 }

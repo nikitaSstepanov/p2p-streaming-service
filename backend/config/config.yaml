@@ -1,0 +1,27 @@
+server:
+    url: ":80"
+    readTimeout: 10s
+    writeTimeout: 10s 
+    
+
+logger:
+    level: "info"
+    add_source: false
+    is_json: true
+    set_default: true
+
+jwt:
+    issuer: "p2p-streaming-service"
+    audience: ["clients"]
+
+postgres:
+    host: "localhost"
+    port: "5432"
+    username: "admin"
+    dbname: "postgres"
+    sslmode: "disable"
+
+redis:
+    host: "localhost"
+    port: "6379"
+    db: "1"

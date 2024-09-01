@@ -8,30 +8,31 @@ import (
 	"fmt"
 )
 
-const (
-	readTimeout  = 10 * time.Minute
-	writeTimeout = 10 * time.Minute
-)
-
 type Server struct {
 	server *http.Server
 }
 
-func New(handler http.Handler, url string) *Server {
+type Config struct {
+	Url          string        `yaml:"url"`
+	ReadTimeout  time.Duration `yaml:"readTimeout"`
+	WriteTimeout time.Duration `yaml:"writeTimeout"`
+}
+
+func New(handler http.Handler, cfg *Config) *Server {
 	return &Server{
 		server: &http.Server{
-			ReadTimeout:  readTimeout,
-			WriteTimeout: writeTimeout,
+			ReadTimeout:  cfg.ReadTimeout,
+			WriteTimeout: cfg.WriteTimeout,
 			Handler:      handler,
-			Addr:         url,
+			Addr:         cfg.Url,
 		},
 	}
 }
 
-func (s *Server) Start() error {
+func (s *Server) Start(logger *slog.Logger) error {
 	var err error
 
-	slog.Info(fmt.Sprintf("Server started at %s", s.server.Addr))
+	logger.Info(fmt.Sprintf("Server started at %s", s.server.Addr))
 
 	go func() {
 		err = s.server.ListenAndServe()

@@ -1,121 +1,100 @@
 package app
 
 import (
-	"os/signal"
-	"log/slog"
-	"syscall"
 	"context"
-	"fmt"
+	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/controllers/http/v1"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/usecases/services"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/usecases/storage"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/usecases/state"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/config"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/postgresql"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/server"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/migrations"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/logger"
-	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/redis"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"github.com/spf13/viper"
+	controller "github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/controller/http/v1"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/usecase"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/usecase/pkg/auth"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/usecase/state"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/internal/usecase/storage"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/migrations"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/client/postgresql"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/client/redis"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/logging"
+	"github.com/nikitaSstepanov/p2p-streaming-service/backend/pkg/server"
 )
 
 type App struct {
-	Controller *controllers.Controller
-	Services   *services.Services
-	Storage    *storage.Storage
-	Server     *server.Server
+	controller *controller.Controller
+	usecase    *usecase.UseCase
+	storage    *storage.Storage
+	server     *server.Server
+	logger     *logging.Logger
 }
 
-func New() *App {
-	logger := logger.New()
+func New(configPath string) *App {
+	cfg, err := GetAppConfig(configPath)
+	if err != nil {
+		panic("Can`t get app config. Error: " + err.Error())
+	}
 
-	slog.SetDefault(logger.Logger)
+	logger := logging.NewLogger(cfg.Logger)
 
 	if err := os.MkdirAll("files", 0777); err != nil {
-		slog.Error("Can`t init files directory. Error:", err)
+		logger.Error("Can`t init files directory. Error:", err)
 	}
 
 	gin.SetMode(gin.ReleaseMode)
 
-	if err := godotenv.Load(".env"); err != nil {
-		slog.Error("Can`t load env. Error:", err)
-	}
-
-	if err := config.Init(); err != nil {
-		slog.Error("Can't init config Error:", err)
-	}
-
 	ctx := context.TODO()
 	
-	db, err := postgresql.ConnectToDb(ctx, &postgresql.Config{
-		Username: viper.GetString("db.username"),
-		Password: os.Getenv("POSTGRES_PASSWORD"),
-		DBName:   viper.GetString("db.dbname"),
-		Port:     viper.GetString("db.port"),
-		Host:     viper.GetString("db.host"),
-		SSLMode:  viper.GetString("db.sslmode"),
-	})
-
+	postgres, err := postgresql.ConnectToDB(ctx, cfg.Postgres)
 	if err != nil {
-		slog.Error("Can`t connect to db. Error:", err)
+		logger.Error("Can`t connect to db. Error:", err)
 	} else {
-		slog.Info("Db is connected.")
+		logger.Info("Db is connected.")
 	}
 
-	if err := migrations.Migrate(db); err != nil {
-		slog.Error("Can`t migrate db scheme. Error:", err)
+	if err := migrations.Migrate(postgres); err != nil {
+		logger.Error("Can`t migrate db scheme. Error:", err)
 	}
 
-	redis, err := redis.ConnectToRedis(ctx, &redis.Config{
-		Host:     viper.GetString("redis.host"),
-		Port:     viper.GetString("redis.port"),
-		Password: os.Getenv("REDIS_PASSWORD"),
-		DBNumber: viper.GetString("redis.db"),
-	})
-	
+	redis, err := redis.ConnectToRedis(ctx, cfg.Redis)
 	if err != nil {
 		slog.Error("Can`t conntect redis. Error:", err)
 	} else {
 		slog.Info("Redis is connected.")
 	}
 
-	state := state.New()
+	jwt := auth.NewJwt(cfg.Jwt)
 
-	url := viper.GetString("url")
+	state := state.New()
 
 	app := &App{}
 
-	app.Storage = storage.New(db)
+	app.storage = storage.New(postgres, redis)
 	
-	app.Services = services.New(app.Storage, state, redis)
+	app.usecase = usecase.New(app.storage, state, jwt)
 
-	app.Controller = controllers.New(app.Services)
+	app.controller = controller.New(app.usecase)
 
-	handler := app.Controller.InitRoutes()
+	handler := app.controller.InitRoutes()
 
-	app.Server = server.New(handler, url)
+	app.server = server.New(handler, cfg.Server)
 	
 	return app
 }
 
 func (a *App) Run() error {
-	if err := a.Server.Start(); err != nil {
+	if err := a.server.Start(a.logger); err != nil {
 		slog.Error("Can`t run application. Error:", err)
 	}
 
-	fmt.Println("Application is running.")
+	a.logger.Info("Application is running.")
 
 	err := ShutdownApp(a)
 
 	if err != nil {
-		slog.Error("Application shutdown error. Error:", err)
+		a.logger.Error("Application shutdown error. Error:", err)
 	}
 
-	slog.Info("Application Shutting down.")
+	a.logger.Info("Application Shutting down.")
 
 	return nil
 }
@@ -125,7 +104,7 @@ func ShutdownApp(a *App) error {
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	<-quit
 
-	if err := a.Server.Shutdown(context.Background()); err != nil {
+	if err := a.server.Shutdown(context.Background()); err != nil {
 		return err
 	}
 	
